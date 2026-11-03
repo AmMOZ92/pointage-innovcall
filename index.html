@@ -1,10 +1,13 @@
-<title>Pointage Téléconseiller</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Pointage Téléconseiller - INNOVCALL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: horloge Maroc en tête, deux profils en onglets, trois gros boutons, puis bilan du mois et tableau des journées */
 :root{
   --bg:#eef1f5; --surface:#ffffff; --fg:#1b2430; --muted:#5d6978; --line:#d5dbe3;
   --accent:#2c5fa8; --accent-soft:#e3ecf8;
@@ -18,11 +21,6 @@
   --accent:#7aa8e8; --accent-soft:#223149;
   --go:#2fbf6c; --go-fg:#04210f; --pause:#f5c623; --pause-fg:#2a2100; --stop:#ec5b5b; --stop-fg:#2b0505;
   --late:#ff8a7a; --off:#2a323e; --off-fg:#6d7888; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2e3846;
-  --accent:#7aa8e8; --accent-soft:#223149;
-  --go:#2fbf6c; --go-fg:#04210f; --pause:#f5c623; --pause-fg:#2a2100; --stop:#ec5b5b; --stop-fg:#2b0505;
-  --late:#ff8a7a; --off:#2a323e; --off-fg:#6d7888; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;
   padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -34,10 +32,6 @@ h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
 .clock{font-family:var(--mono);font-weight:500;font-size:clamp(40px,11vw,64px);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .date{color:var(--muted);margin-top:6px;text-transform:capitalize}
 .tz{font-size:12px;color:var(--muted);text-align:right}
-.tabs{display:flex;gap:8px}
-.tab{flex:1;min-width:0;padding:12px 10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;font:inherit;font-weight:600;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:flex-start}
-.tab small{font-weight:400;color:var(--muted);font-size:12px}
-.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
 .status{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between}
 .pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;font-weight:600;font-size:13px;background:var(--off);color:var(--fg)}
 .pill i{width:9px;height:9px;border-radius:50%;background:var(--off-fg);display:block}
@@ -52,7 +46,6 @@ h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
 .btn.pause{background:var(--pause);color:var(--pause-fg)}
 .btn.stop{background:var(--stop);color:var(--stop-fg)}
 .btn:disabled{background:var(--off);color:var(--off-fg);cursor:not-allowed}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .sum span{font-size:12px;color:var(--muted)}
@@ -76,10 +69,45 @@ tfoot td{font-weight:600;border-bottom:0}
 textarea{width:100%;min-height:70px;font-family:var(--mono);font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
 details summary{cursor:pointer;font-weight:600}
 details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
-@media (prefers-reduced-motion:no-preference){.btn{transition:transform .08s}.btn:active:not(:disabled){transform:scale(.97)}}
-</style>
 
-<div class="wrap">
+/* Style de l'écran de Login */
+.login-screen{max-width:400px;margin:60px auto;display:flex;flex-direction:column;gap:16px}
+.login-header{text-align:center;margin-bottom:10px}
+.login-header h1{font-size:22px;color:var(--accent)}
+.login-err{color:var(--late);font-size:13px;margin-top:8px;text-align:center}
+.user-bar{display:flex;justify-content:space-between;align-items:center;background:var(--accent-soft);padding:10px 16px;border-radius:8px;border:1px solid var(--accent)}
+.user-bar b{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ECAN DE LOGIN -->
+<div id="loginSection" class="login-screen">
+  <div class="card">
+    <div class="login-header">
+      <h1>INNOVCALL</h1>
+      <p class="small">Espace Pointage Téléconseiller</p>
+    </div>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:12px">
+      <label>Identifiant
+        <input type="text" id="loginUser" required placeholder="ex: conseiller1" autocomplete="username">
+      </label>
+      <label>Mot de passe
+        <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
+      </label>
+      <button type="submit" class="ghost primary" style="margin-top:8px;padding:12px">Se connecter</button>
+      <div id="loginErr" class="login-err"></div>
+    </form>
+  </div>
+</div>
+
+<!-- INTERFACE DE POINTAGE -->
+<div id="appSection" class="wrap" style="display:none">
+  <div class="user-bar">
+    <span>Connecté en tant que : <b id="loggedInName">Conseiller</b></span>
+    <button class="ghost" id="bLogout" style="padding:4px 10px;font-size:12px">Déconnexion</button>
+  </div>
+
   <div class="card top">
     <div>
       <div class="clock" id="clock">--:--:--</div>
@@ -87,8 +115,6 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
     </div>
     <div class="tz">Heure du Maroc<br>(Africa/Casablanca)</div>
   </div>
-
-  <div class="tabs" role="tablist" id="tabs"></div>
 
   <div class="card" style="display:flex;flex-direction:column;gap:14px">
     <div class="status">
@@ -106,19 +132,14 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
     <div class="small" id="lateInfo"></div>
   </div>
 
+  <!-- GOOGLE SHEETS SYSTEM -->
   <div class="card">
     <div class="row" style="margin-bottom:8px">
       <h2>Google Sheets</h2>
-      <span class="pill"><span id="sheetState">Aucune feuille liée</span></span>
+      <span class="pill"><span id="sheetState">Synchronisé</span></span>
     </div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
-      <label>Lien de votre feuille (page en ligne)<input id="fSheet" type="url" placeholder="https://docs.google.com/spreadsheets/d/..."></label>
-      <label>Lien du script Apps Script, se termine par /exec (fichier du bureau)<input id="fScript" type="url" placeholder="https://script.google.com/macros/s/.../exec"></label>
-      <label>Clé du script<input id="fKey" type="password" autocomplete="off" placeholder="même valeur que SECRET dans le script"></label>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-      <button class="ghost" id="sheetPrep" type="button">Préparer la feuille</button>
-      <button class="ghost" id="sheetFlush" type="button" hidden>Renvoyer</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="ghost" id="sheetFlush" type="button" hidden>Renvoyer les données bloquées</button>
     </div>
     <div class="small" id="sheetMsg" style="margin-top:8px"></div>
   </div>
@@ -164,23 +185,9 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
           <label>Primes du mois<input id="fBonus" type="number" min="0" step="0.01" inputmode="decimal"></label>
           <label>Retenues du mois<input id="fDed" type="number" min="0" step="0.01" inputmode="decimal"></label>
         </div>
-        <label style="flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--fg)"><input id="fAuto" type="checkbox" style="width:auto"> Déduire automatiquement la pause prévue si je n'appuie pas sur le bouton jaune</label>
-        <div class="small">Primes et retenues s'appliquent au mois affiché. Le salaire estimé = heures de production × taux horaire + primes − retenues. Les pauses ne sont pas payées.</div>
-      </div>
-    </details>
-  </div>
-
-  <div class="card">
-    <details>
-      <summary>Ajouter ou corriger une journée</summary>
-      <div>
-        <div class="grid">
-          <label>Date<input id="mDate" type="date"></label>
-          <label>Début<input id="mStart" type="time"></label>
-          <label>Fin<input id="mEnd" type="time"></label>
-          <label>Pause (minutes)<input id="mPause" type="number" min="0" step="1" value="0" inputmode="numeric"></label>
-        </div>
-        <div><button class="ghost primary" id="mAdd">Ajouter la journée</button> <span class="small" id="mMsg"></span></div>
+        <label style="flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--fg);margin-top:10px">
+          <input id="fAuto" type="checkbox" style="width:auto"> Déduire automatiquement la pause prévue si je n'appuie pas sur le bouton jaune
+        </label>
       </div>
     </details>
   </div>
@@ -189,7 +196,7 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
     <details>
       <summary>Sauvegarde des données</summary>
       <div>
-        <div class="small">Les données restent dans ce navigateur. Copiez la sauvegarde pour la garder ou la remettre sur un autre appareil.</div>
+        <div class="small">Les données restent enregistrées dans votre navigateur.</div>
         <textarea id="bk" aria-label="Sauvegarde"></textarea>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="ghost" id="bkCopy">Copier la sauvegarde</button>
@@ -203,6 +210,19 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 
 <script>
 (function(){
+// CONFIGURATION INTEGRÉE DU SCRIPT ET DE LA FEUILLE
+var CONFIG = {
+  sheetUrl: "https://docs.google.com/spreadsheets/d/1HhmyIfsSy4bIeOMMR3lAsDXgsndcdqzxf10D97mT1TI/edit#gid=654289880",
+  scriptUrl: "https://script.google.com/macros/s/AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM/exec",
+  secretKey: "AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM"
+};
+
+// BASE DES UTILISATEURS (COMPTES TELECONSEILLERS)
+var USERS = {
+  "conseiller1": { pass: "1234", profileIndex: 0, defaultName: "Conseiller 1" },
+  "conseiller2": { pass: "1234", profileIndex: 1, defaultName: "Conseiller 2" }
+};
+
 var TZ='Africa/Casablanca', KEY='pointage-teleconseiller-v1';
 var dtf=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 function parts(ms){var o={};dtf.formatToParts(new Date(ms)).forEach(function(p){if(p.type!=='literal')o[p.type]=parseInt(p.value,10)});return o}
@@ -223,29 +243,50 @@ function defProfile(n){return {name:'Conseiller '+n,rate:0,cur:'MAD',plan:'14:00
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
 if(!S||!S.p||S.p.length!==2){S={cur:0,p:[defProfile(1),defProfile(2)]}}
+S.sheet = CONFIG.sheetUrl;
+S.script = CONFIG.scriptUrl;
+S.key = CONFIG.secretKey;
 S.p.forEach(function(p){if(p.planPause==null){p.planPause=60;p.planEnd='00:00';p.autoPause=true;if(!p.sessions.length&&p.plan==='09:00')p.plan='14:00'}});
+
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function P(){return S.p[S.cur]}
 function $(id){return document.getElementById(id)}
+
+// GESTION DU LOGIN
+var currentUser = null;
+$('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var u = $('loginUser').value.trim().toLowerCase();
+  var p = $('loginPass').value.trim();
+  if(USERS[u] && USERS[u].pass === p){
+    currentUser = u;
+    S.cur = USERS[u].profileIndex;
+    save();
+    $('loginSection').style.display = 'none';
+    $('appSection').style.display = 'flex';
+    $('loggedInName').textContent = P().name || USERS[u].defaultName;
+    loadSettings();
+    renderAll();
+  } else {
+    $('loginErr').textContent = "Identifiant ou mot de passe incorrect.";
+  }
+});
+
+$('bLogout').addEventListener('click', function(){
+  currentUser = null;
+  $('loginUser').value = '';
+  $('loginPass').value = '';
+  $('loginErr').textContent = '';
+  $('appSection').style.display = 'none';
+  $('loginSection').style.display = 'flex';
+});
 
 function active(p){var s=p.sessions[p.sessions.length-1];return s&&s.end==null?s:null}
 function pauseMs(s,now){var t=0;s.pauses.forEach(function(q){t+=(q.e==null?now:q.e)-q.s});return t}
 function prodMs(s,now){var e=s.end==null?now:s.end;return Math.max(0,e-s.start-pauseMs(s,now))}
 function lateMin(p,s){var pl=p.plan.split(':');var plan=parseInt(pl[0],10)*60+parseInt(pl[1],10);var l=minOfDay(s.start)-plan;return l>p.tol?l:0}
 function onPause(s){var q=s.pauses[s.pauses.length-1];return q&&q.e==null}
-
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-
-function renderTabs(){
-  var t=$('tabs');t.textContent='';
-  S.p.forEach(function(p,i){
-    var b=document.createElement('button');b.className='tab';b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',i===S.cur?'true':'false');
-    var a=active(p);var st=!a?'Hors shift':(onPause(a)?'En pause':'En shift');
-    b.appendChild(document.createTextNode(p.name));var sm=document.createElement('small');sm.textContent='Profil '+(i+1)+' · '+st;b.appendChild(sm);
-    b.addEventListener('click',function(){S.cur=i;save();loadSettings();renderAll()});
-    t.appendChild(b);
-  });
-}
 
 function renderLive(){
   var now=Date.now(),p=P(),a=active(p);
@@ -294,7 +335,7 @@ function renderMonth(){
   $('sPause').textContent=dur(tz);
   var nf=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
   $('sPay').textContent=nf.format(pay)+' '+p.cur;
-  $('payDetail').textContent=nf.format(hours)+' h × '+nf.format(p.rate)+' '+p.cur+' = '+nf.format(base)+(p.bonus?' + primes '+nf.format(p.bonus):'')+(p.ded?' − retenues '+nf.format(p.ded):'')+(p.rate?'':'  (renseignez votre taux horaire dans les réglages)');
+  $('payDetail').textContent=nf.format(hours)+' h × '+nf.format(p.rate)+' '+p.cur+' = '+nf.format(base)+(p.bonus?' + primes '+nf.format(p.bonus):'')+(p.ded?' − retenues '+nf.format(p.ded):'');
 }
 
 function renderLate(){
@@ -303,7 +344,7 @@ function renderLate(){
   else el.textContent='Shift prévu de '+p.plan+' à '+p.planEnd+' avec '+p.planPause+' min de pause'+(p.tol?' (tolérance de retard '+p.tol+' min)':'')+'.';
 }
 
-function renderAll(){renderTabs();renderLive();renderMonth();renderLate();renderSheet()}
+function renderAll(){renderLive();renderMonth();renderLate();renderSheet()}
 
 $('bGo').addEventListener('click',function(){
   var p=P(),a=active(p),now=Date.now();
@@ -327,9 +368,22 @@ $('bStop').addEventListener('click',function(){
   save();renderAll();
 });
 
-function loadSettings(){var p=P();$('fName').value=p.name;$('fRate').value=p.rate||'';$('fCur').value=p.cur;$('fPlan').value=p.plan;$('fPlanEnd').value=p.planEnd;$('fPlanPause').value=p.planPause;$('fAuto').checked=!!p.autoPause;$('mPause').value=p.planPause;$('fSheet').value=S.sheet||'';$('fScript').value=S.script||'';$('fKey').value=S.key||'';$('fTol').value=p.tol||0;$('fBonus').value=p.bonus||'';$('fDed').value=p.ded||''}
+function loadSettings(){
+  var p=P();
+  $('fName').value=p.name;
+  $('fRate').value=p.rate||'';
+  $('fCur').value=p.cur;
+  $('fPlan').value=p.plan;
+  $('fPlanEnd').value=p.planEnd;
+  $('fPlanPause').value=p.planPause;
+  $('fAuto').checked=!!p.autoPause;
+  $('fTol').value=p.tol||0;
+  $('fBonus').value=p.bonus||'';
+  $('fDed').value=p.ded||'';
+}
+
 function bind(id,fn){$(id).addEventListener('input',function(){fn(this.value);save();renderAll()})}
-bind('fName',function(v){P().name=v||('Conseiller '+(S.cur+1))});
+bind('fName',function(v){P().name=v||('Conseiller '+(S.cur+1));if(currentUser)$('loggedInName').textContent=P().name});
 bind('fRate',function(v){P().rate=parseFloat(v)||0});
 bind('fCur',function(v){P().cur=v||'MAD'});
 bind('fPlan',function(v){if(v)P().plan=v});
@@ -341,20 +395,6 @@ bind('fBonus',function(v){P().bonus=parseFloat(v)||0});
 bind('fDed',function(v){P().ded=parseFloat(v)||0});
 $('month').addEventListener('input',renderMonth);
 
-$('mAdd').addEventListener('click',function(){
-  var d=$('mDate').value,s=$('mStart').value,e=$('mEnd').value,pz=parseInt($('mPause').value,10)||0,msg=$('mMsg');
-  if(!d||!s||!e){msg.textContent='Remplissez la date, le début et la fin.';return}
-  var dp=d.split('-').map(Number),sp=s.split(':').map(Number),ep=e.split(':').map(Number);
-  var st=toEpoch(dp[0],dp[1],dp[2],sp[0],sp[1]),en=toEpoch(dp[0],dp[1],dp[2],ep[0],ep[1]);
-  if(en<=st)en+=86400000;
-  if(en-st<=pz*60000){msg.textContent='La pause dépasse la durée du shift.';return}
-  var pauses=pz>0?[{s:st+Math.floor((en-st)/2),e:st+Math.floor((en-st)/2)+pz*60000}]:[];
-  var ns={id:uid(),start:st,end:en,pauses:pauses};
-  P().sessions.push(ns);syncDay(P(),ns);
-  P().sessions.sort(function(a,b){return a.start-b.start});
-  save();msg.textContent='Journée ajoutée.';$('month').value=monthKey(st);renderAll();
-});
-
 $('bkCopy').addEventListener('click',function(){
   var ta=$('bk');ta.value=JSON.stringify(S);ta.select();
   var m=$('bkMsg');
@@ -363,33 +403,16 @@ $('bkCopy').addEventListener('click',function(){
 });
 $('bkLoad').addEventListener('click',function(){
   var m=$('bkMsg');
-  try{var o=JSON.parse($('bk').value);if(!o||!o.p||o.p.length!==2)throw 0;S=o;S.cur=S.cur||0;save();loadSettings();renderAll();m.textContent='Données restaurées.'}
+  try{var o=JSON.parse($('bk').value);if(!o||!o.p||o.p.length!==2)throw 0;S=o;save();loadSettings();renderAll();m.textContent='Données restaurées.'}
   catch(e){m.textContent='Texte de sauvegarde invalide.'}
 });
 
-/* ---- Google Sheets : une ligne ajoutée à chaque bouton, une ligne récap à chaque fin de shift ---- */
-var SERVER='Google Sheets',SHEET_EV='Pointage',SHEET_DAY='Journees';
-var ERR={
-  no_sheet:'Collez le lien de votre feuille (page en ligne) ou celui du script Apps Script (fichier du bureau).',
-  no_mcp:'Dans le fichier du bureau, collez le lien du script Apps Script (qui se termine par /exec). « Préparer la feuille » marche seulement dans la page en ligne.',
-  needs_reauth:'Reconnectez Google Sheets dans Paramètres, Connecteurs de claude.ai.',
-  server_not_connected:'Ajoutez Google Sheets dans Paramètres, Connecteurs de claude.ai.',
-  selection_required:'Choisissez le compte Google Sheets à utiliser quand claude.ai le demande.',
-  not_in_manifest:"Google Sheets n'est pas autorisé pour cette page. Autorisez-le dans les permissions de la page.",
-  approval_required:"Google Sheets attend votre autorisation pour cette page. Appuyez sur « Renvoyer » et acceptez.",
-  blocked_by_policy:'Votre organisation bloque Google Sheets pour cette page.',
-  tool_error:"Google Sheets a refusé l'écriture. Vérifiez le lien puis appuyez sur « Préparer la feuille ».",
-  server_unavailable:'Google Sheets ne répond pas. Réessayez avec « Renvoyer ».',
-  other:"L'envoi a échoué. Réessayez avec « Renvoyer »."
-};
+/* ---- GOOGLE SHEETS SYNC VIA APPS SCRIPT ---- */
+var SHEET_EV='Pointage',SHEET_DAY='Journees';
 S.outbox=S.outbox||[];
 S.outbox.forEach(function(i){if(i.st==='sending')i.st='failed'});
-var lastErr=null,mcpP=null;
-function getMcp(){
-  if(!mcpP){mcpP=(window.claude&&typeof window.claude.use==='function')?window.claude.use('mcp').then(function(m){return m||null},function(){return null}):Promise.resolve(null)}
-  return mcpP;
-}
-function sheetId(){var v=(S.sheet||'').trim();var m=v.match(/\/d\/([a-zA-Z0-9_-]+)/);if(m)return m[1];return /^[a-zA-Z0-9_-]{20,}$/.test(v)?v:''}
+var lastErr=null;
+
 function stamp(ms){return dayKey(ms)+' '+hms(ms)}
 function logEv(p,ms,ev){queue(SHEET_EV+'!A:C',[stamp(ms),p.name,ev])}
 function syncDay(p,s){
@@ -397,20 +420,25 @@ function syncDay(p,s){
   queue(SHEET_DAY+'!A:H',[dayKey(s.start),p.name,hm(s.start),s.end==null?'':hm(s.end),Math.round(pauseMs(s,now)/60000),Math.round(pr/60000),Math.round(pr/3600000*100)/100,lateMin(p,s)]);
 }
 function queue(range,row){var it={id:uid(),range:range,values:[row],st:'new'};S.outbox.push(it);save();sendItem(it)}
+
 function sendItem(it){
   it.st='sending';save();renderSheet();
-  return getMcp().then(function(m){
-    var id=sheetId();
-    if(m&&id)return m.callTool(SERVER,'append_values',{spreadsheetId:id,range:it.range,values:it.values});
-    if((S.script||'').trim())return postScript(it);
-    if(!m)throw {code:'no_mcp'};
-    throw {code:'no_sheet'};
-  }).then(function(){
+  return postScript(it).then(function(){
     S.outbox=S.outbox.filter(function(x){return x.id!==it.id});lastErr=null;save();renderSheet();
   },function(e){
-    it.st='failed';lastErr=(e&&e.code)||'other';save();renderSheet();
+    it.st='failed';lastErr='other';save();renderSheet();
   });
 }
+
+function postScript(it){
+  return fetch(CONFIG.scriptUrl,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({key:CONFIG.secretKey,tab:it.range.split('!')[0],row:it.values[0]})
+  });
+}
+
 function flush(){
   lastErr=null;
   var chain=Promise.resolve();
@@ -418,63 +446,22 @@ function flush(){
     chain=chain.then(function(){if(lastErr)return null;return sendItem(it)});
   });
 }
+
 function renderSheet(){
-  var n=S.outbox.length,id=sheetId()||(S.script||'').trim(),sending=S.outbox.some(function(i){return i.st==='sending'});
+  var n=S.outbox.length,sending=S.outbox.some(function(i){return i.st==='sending'});
   var failed=S.outbox.filter(function(i){return i.st==='failed'}).length;
   $('sheetFlush').hidden=!failed;
   $('sheetFlush').textContent='Renvoyer ('+failed+')';
   var t;
-  if(!id)t='Aucune feuille liée';else if(lastErr)t='Envoi en échec';else if(sending)t='Envoi en cours';else if(n)t=n+' en attente';else t='Synchronisé';
+  if(lastErr)t='Envoi en échec';else if(sending)t='Envoi en cours';else if(n)t=n+' en attente';else t='Synchronisé';
   $('sheetState').textContent=t;
-  if(lastErr)$('sheetMsg').textContent=ERR[lastErr]||ERR.other;
-  else if(!id)$('sheetMsg').textContent=ERR.no_sheet;
-  else if(!$('sheetMsg').dataset.keep)$('sheetMsg').textContent='';
 }
-$('fSheet').addEventListener('input',function(){S.sheet=this.value;save();renderSheet()});
-$('fScript').addEventListener('input',function(){S.script=this.value;save();renderSheet()});
-$('fKey').addEventListener('input',function(){S.key=this.value;save()});
-function postScript(it){
-  return fetch((S.script||'').trim(),{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:S.key||'',tab:it.range.split('!')[0],row:it.values[0]})});
-}
-$('sheetFlush').addEventListener('click',flush);
-$('sheetPrep').addEventListener('click',function(){
-  var msg=$('sheetMsg'),id=sheetId(),M;
-  if(!id){lastErr='no_sheet';renderSheet();return}
-  lastErr=null;msg.dataset.keep='1';msg.textContent='Préparation de la feuille…';
-  getMcp().then(function(m){
-    if(!m)throw {code:'no_mcp'};
-    M=m;
-    return m.callTool(SERVER,'get_spreadsheet',{spreadsheetId:id,fields:['sheets.properties.title']});
-  }).then(function(r){
-    var raw=typeof r.payload==='string'?r.payload:JSON.stringify(r.payload!=null?r.payload:r.content);
-    var titles=[],re=/"title"\s*:\s*"([^"]+)"/g,x;
-    while((x=re.exec(raw)))titles.push(x[1]);
-    var need=[SHEET_EV,SHEET_DAY].filter(function(t){return titles.indexOf(t)<0});
-    if(!need.length)return need;
-    return M.callTool(SERVER,'update_spreadsheet',{spreadsheetId:id,requests:need.map(function(t){return {addSheet:{properties:{title:t}}}})}).then(function(){return need});
-  }).then(function(need){
-    var heads={};
-    heads[SHEET_EV]=[['Horodatage (Maroc)','Profil','Événement']];
-    heads[SHEET_DAY]=[['Date','Profil','Début','Fin','Pause (min)','Production (min)','Production (h)','Retard (min)']];
-    var chain=Promise.resolve();
-    need.forEach(function(t){
-      var last=String.fromCharCode(64+heads[t][0].length);
-      chain=chain.then(function(){return M.callTool(SERVER,'update_values',{spreadsheetId:id,range:t+'!A1:'+last+'1',values:heads[t]})});
-    });
-    return chain.then(function(){return need});
-  }).then(function(need){
-    lastErr=null;
-    msg.textContent=need.length?'Feuille prête : onglets '+need.join(' et ')+' créés.':'Feuille prête : les onglets existent déjà.';
-    renderSheet();
-  },function(e){
-    lastErr=(e&&e.code)||'other';delete msg.dataset.keep;renderSheet();
-  });
-});
 
+$('sheetFlush').addEventListener('click',flush);
 $('month').value=monthKey(Date.now());
-$('mDate').value=dayKey(Date.now());
-loadSettings();renderAll();
 setInterval(renderLive,1000);
 setInterval(renderMonth,30000);
 })();
 </script>
+</body>
+</html>
