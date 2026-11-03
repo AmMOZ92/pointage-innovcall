@@ -1,0 +1,480 @@
+<title>Pointage Téléconseiller</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: horloge Maroc en tête, deux profils en onglets, trois gros boutons, puis bilan du mois et tableau des journées */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --fg:#1b2430; --muted:#5d6978; --line:#d5dbe3;
+  --accent:#2c5fa8; --accent-soft:#e3ecf8;
+  --go:#1f9d55; --go-fg:#ffffff; --pause:#f2b705; --pause-fg:#2a2100; --stop:#d63a3a; --stop-fg:#ffffff;
+  --late:#c0392b; --off:#c9d0da; --off-fg:#7b8696;
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2e3846;
+  --accent:#7aa8e8; --accent-soft:#223149;
+  --go:#2fbf6c; --go-fg:#04210f; --pause:#f5c623; --pause-fg:#2a2100; --stop:#ec5b5b; --stop-fg:#2b0505;
+  --late:#ff8a7a; --off:#2a323e; --off-fg:#6d7888; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2e3846;
+  --accent:#7aa8e8; --accent-soft:#223149;
+  --go:#2fbf6c; --go-fg:#04210f; --pause:#f5c623; --pause-fg:#2a2100; --stop:#ec5b5b; --stop-fg:#2b0505;
+  --late:#ff8a7a; --off:#2a323e; --off-fg:#6d7888; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2{margin:0;text-wrap:balance}
+h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.clock{font-family:var(--mono);font-weight:500;font-size:clamp(40px,11vw,64px);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.date{color:var(--muted);margin-top:6px;text-transform:capitalize}
+.tz{font-size:12px;color:var(--muted);text-align:right}
+.tabs{display:flex;gap:8px}
+.tab{flex:1;min-width:0;padding:12px 10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;font:inherit;font-weight:600;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.tab small{font-weight:400;color:var(--muted);font-size:12px}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.status{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;font-weight:600;font-size:13px;background:var(--off);color:var(--fg)}
+.pill i{width:9px;height:9px;border-radius:50%;background:var(--off-fg);display:block}
+.pill.work i{background:var(--go)}.pill.brk i{background:var(--pause)}
+.live{display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.live div span{display:block;font-family:var(--font);font-size:12px;color:var(--muted)}
+.live b{font-size:20px;font-weight:600}
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.btn{border:0;border-radius:10px;padding:20px 8px;font:inherit;font-weight:600;font-size:clamp(14px,3.6vw,18px);cursor:pointer;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;line-height:1.2}
+.btn small{font-weight:400;font-size:12px;opacity:.85}
+.btn.go{background:var(--go);color:var(--go-fg)}
+.btn.pause{background:var(--pause);color:var(--pause-fg)}
+.btn.stop{background:var(--stop);color:var(--stop-fg)}
+.btn:disabled{background:var(--off);color:var(--off-fg);cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sum span{font-size:12px;color:var(--muted)}
+.sum b{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sum .big b{font-size:30px;color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+input{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0;width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.tablebox{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:520px}
+th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:8px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px}
+td:first-child{font-family:var(--font)}
+td.late{color:var(--late);font-weight:600}
+tfoot td{font-weight:600;border-bottom:0}
+.x{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer;font:inherit;font-size:12px}
+.small{font-size:13px;color:var(--muted)}
+.ghost{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;border-radius:8px;cursor:pointer}
+.ghost.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+textarea{width:100%;min-height:70px;font-family:var(--mono);font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
+details summary{cursor:pointer;font-weight:600}
+details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
+@media (prefers-reduced-motion:no-preference){.btn{transition:transform .08s}.btn:active:not(:disabled){transform:scale(.97)}}
+</style>
+
+<div class="wrap">
+  <div class="card top">
+    <div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="tz">Heure du Maroc<br>(Africa/Casablanca)</div>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="status">
+      <span class="pill" id="pill"><i></i><span id="pilltxt">Hors shift</span></span>
+      <div class="live">
+        <div><span>Production aujourd'hui</span><b id="liveProd">0h 00min</b></div>
+        <div><span>Pause en cours / total</span><b id="livePause">0min</b></div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn go" id="bGo">Début de shift<small>Vert</small></button>
+      <button class="btn pause" id="bPause">Pause<small>Jaune</small></button>
+      <button class="btn stop" id="bStop">Fin de shift<small>Rouge</small></button>
+    </div>
+    <div class="small" id="lateInfo"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <h2>Google Sheets</h2>
+      <span class="pill"><span id="sheetState">Aucune feuille liée</span></span>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+      <label>Lien de votre feuille (page en ligne)<input id="fSheet" type="url" placeholder="https://docs.google.com/spreadsheets/d/..."></label>
+      <label>Lien du script Apps Script, se termine par /exec (fichier du bureau)<input id="fScript" type="url" placeholder="https://script.google.com/macros/s/.../exec"></label>
+      <label>Clé du script<input id="fKey" type="password" autocomplete="off" placeholder="même valeur que SECRET dans le script"></label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+      <button class="ghost" id="sheetPrep" type="button">Préparer la feuille</button>
+      <button class="ghost" id="sheetFlush" type="button" hidden>Renvoyer</button>
+    </div>
+    <div class="small" id="sheetMsg" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <h2>Bilan du mois</h2>
+      <label style="max-width:190px">Mois<input type="month" id="month"></label>
+    </div>
+    <div class="sum">
+      <div><span>Heures de production</span><b id="sHours">0h 00min</b></div>
+      <div><span>Jours travaillés</span><b id="sDays">0</b></div>
+      <div><span>Retards cumulés</span><b id="sLate">0 min</b></div>
+      <div><span>Pauses cumulées</span><b id="sPause">0h 00min</b></div>
+      <div class="big"><span>Salaire final estimé</span><b id="sPay">0</b></div>
+    </div>
+    <div class="small" id="payDetail" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-bottom:10px">Journées du mois</h2>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Jour</th><th>Début</th><th>Fin</th><th>Pause</th><th>Production</th><th>Retard</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot id="foot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Réglages du conseiller</summary>
+      <div>
+        <div class="grid">
+          <label>Nom du profil<input id="fName" type="text"></label>
+          <label>Taux horaire<input id="fRate" type="number" min="0" step="0.01" inputmode="decimal"></label>
+          <label>Devise<input id="fCur" type="text" maxlength="6"></label>
+          <label>Heure de début prévue<input id="fPlan" type="time"></label>
+          <label>Heure de fin prévue<input id="fPlanEnd" type="time"></label>
+          <label>Pause prévue (minutes)<input id="fPlanPause" type="number" min="0" step="5" inputmode="numeric"></label>
+          <label>Tolérance de retard (min)<input id="fTol" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label>Primes du mois<input id="fBonus" type="number" min="0" step="0.01" inputmode="decimal"></label>
+          <label>Retenues du mois<input id="fDed" type="number" min="0" step="0.01" inputmode="decimal"></label>
+        </div>
+        <label style="flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--fg)"><input id="fAuto" type="checkbox" style="width:auto"> Déduire automatiquement la pause prévue si je n'appuie pas sur le bouton jaune</label>
+        <div class="small">Primes et retenues s'appliquent au mois affiché. Le salaire estimé = heures de production × taux horaire + primes − retenues. Les pauses ne sont pas payées.</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Ajouter ou corriger une journée</summary>
+      <div>
+        <div class="grid">
+          <label>Date<input id="mDate" type="date"></label>
+          <label>Début<input id="mStart" type="time"></label>
+          <label>Fin<input id="mEnd" type="time"></label>
+          <label>Pause (minutes)<input id="mPause" type="number" min="0" step="1" value="0" inputmode="numeric"></label>
+        </div>
+        <div><button class="ghost primary" id="mAdd">Ajouter la journée</button> <span class="small" id="mMsg"></span></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Sauvegarde des données</summary>
+      <div>
+        <div class="small">Les données restent dans ce navigateur. Copiez la sauvegarde pour la garder ou la remettre sur un autre appareil.</div>
+        <textarea id="bk" aria-label="Sauvegarde"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="ghost" id="bkCopy">Copier la sauvegarde</button>
+          <button class="ghost" id="bkLoad">Restaurer depuis le texte</button>
+          <span class="small" id="bkMsg"></span>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+(function(){
+var TZ='Africa/Casablanca', KEY='pointage-teleconseiller-v1';
+var dtf=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function parts(ms){var o={};dtf.formatToParts(new Date(ms)).forEach(function(p){if(p.type!=='literal')o[p.type]=parseInt(p.value,10)});return o}
+function offsetAt(ms){var p=parts(ms);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ms/1000)*1000}
+function toEpoch(y,mo,d,h,mi){var g=Date.UTC(y,mo-1,d,h,mi,0);var e=g-offsetAt(g);e=g-offsetAt(e);return e}
+function pad(n){return n<10?'0'+n:''+n}
+function hms(ms){var p=parts(ms);return pad(p.hour)+':'+pad(p.minute)+':'+pad(p.second)}
+function hm(ms){var p=parts(ms);return pad(p.hour)+':'+pad(p.minute)}
+function dayKey(ms){var p=parts(ms);return p.year+'-'+pad(p.month)+'-'+pad(p.day)}
+function monthKey(ms){var p=parts(ms);return p.year+'-'+pad(p.month)}
+function minOfDay(ms){var p=parts(ms);return p.hour*60+p.minute}
+var dayFmt=new Intl.DateTimeFormat('fr-FR',{timeZone:TZ,weekday:'long',day:'numeric',month:'long',year:'numeric'});
+var shortFmt=new Intl.DateTimeFormat('fr-FR',{timeZone:TZ,weekday:'short',day:'2-digit',month:'2-digit'});
+function dur(ms){var m=Math.max(0,Math.round(ms/60000));return Math.floor(m/60)+'h '+pad(m%60)+'min'}
+function mins(ms){return Math.round(ms/60000)+'min'}
+
+function defProfile(n){return {name:'Conseiller '+n,rate:0,cur:'MAD',plan:'14:00',planEnd:'00:00',planPause:60,autoPause:true,tol:0,bonus:0,ded:0,sessions:[]}}
+var S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.p||S.p.length!==2){S={cur:0,p:[defProfile(1),defProfile(2)]}}
+S.p.forEach(function(p){if(p.planPause==null){p.planPause=60;p.planEnd='00:00';p.autoPause=true;if(!p.sessions.length&&p.plan==='09:00')p.plan='14:00'}});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function P(){return S.p[S.cur]}
+function $(id){return document.getElementById(id)}
+
+function active(p){var s=p.sessions[p.sessions.length-1];return s&&s.end==null?s:null}
+function pauseMs(s,now){var t=0;s.pauses.forEach(function(q){t+=(q.e==null?now:q.e)-q.s});return t}
+function prodMs(s,now){var e=s.end==null?now:s.end;return Math.max(0,e-s.start-pauseMs(s,now))}
+function lateMin(p,s){var pl=p.plan.split(':');var plan=parseInt(pl[0],10)*60+parseInt(pl[1],10);var l=minOfDay(s.start)-plan;return l>p.tol?l:0}
+function onPause(s){var q=s.pauses[s.pauses.length-1];return q&&q.e==null}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+function renderTabs(){
+  var t=$('tabs');t.textContent='';
+  S.p.forEach(function(p,i){
+    var b=document.createElement('button');b.className='tab';b.type='button';b.setAttribute('role','tab');b.setAttribute('aria-selected',i===S.cur?'true':'false');
+    var a=active(p);var st=!a?'Hors shift':(onPause(a)?'En pause':'En shift');
+    b.appendChild(document.createTextNode(p.name));var sm=document.createElement('small');sm.textContent='Profil '+(i+1)+' · '+st;b.appendChild(sm);
+    b.addEventListener('click',function(){S.cur=i;save();loadSettings();renderAll()});
+    t.appendChild(b);
+  });
+}
+
+function renderLive(){
+  var now=Date.now(),p=P(),a=active(p);
+  $('clock').textContent=hms(now);
+  $('date').textContent=dayFmt.format(new Date(now));
+  var pill=$('pill');pill.className='pill';
+  var bGo=$('bGo'),bP=$('bPause'),bS=$('bStop');
+  if(!a){pill.classList.add('off');$('pilltxt').textContent='Hors shift';bGo.firstChild.nodeValue='Début de shift';bGo.disabled=false;bP.disabled=true;bS.disabled=true}
+  else if(onPause(a)){pill.classList.add('brk');$('pilltxt').textContent='En pause depuis '+hm(a.pauses[a.pauses.length-1].s);bGo.firstChild.nodeValue='Reprendre';bGo.disabled=false;bP.disabled=true;bS.disabled=false}
+  else{pill.classList.add('work');$('pilltxt').textContent='En shift depuis '+hm(a.start);bGo.firstChild.nodeValue='En shift';bGo.disabled=true;bP.disabled=false;bS.disabled=false}
+  var dk=dayKey(now),prod=0,pz=0,cur=0;
+  p.sessions.forEach(function(s){if(dayKey(s.start)===dk){prod+=prodMs(s,now);pz+=pauseMs(s,now)}});
+  if(a&&onPause(a))cur=now-a.pauses[a.pauses.length-1].s;
+  $('liveProd').textContent=dur(prod);
+  $('livePause').textContent=(a&&onPause(a)?mins(cur)+' / ':'')+mins(pz);
+}
+
+function renderMonth(){
+  var p=P(),mk=$('month').value,now=Date.now();
+  var list=p.sessions.filter(function(s){return monthKey(s.start)===mk}).sort(function(a,b){return a.start-b.start});
+  var tb=$('rows');tb.textContent='';
+  var tp=0,tz=0,tl=0,days={};
+  list.forEach(function(s){
+    var pr=prodMs(s,now),pz=pauseMs(s,now),l=lateMin(p,s);
+    tp+=pr;tz+=pz;tl+=l;days[dayKey(s.start)]=1;
+    var tr=document.createElement('tr');
+    function td(txt,cls){var c=document.createElement('td');c.textContent=txt;if(cls)c.className=cls;tr.appendChild(c);return c}
+    td(shortFmt.format(new Date(s.start)));
+    td(hm(s.start));
+    td(s.end==null?'en cours':hm(s.end));
+    td(mins(pz));
+    td(dur(pr));
+    td(l>0?'+'+l+' min':'—',l>0?'late':'');
+    var c=document.createElement('td');
+    var x=document.createElement('button');x.type='button';x.className='x';x.textContent='Supprimer';x.setAttribute('aria-label','Supprimer la journée du '+shortFmt.format(new Date(s.start)));
+    x.addEventListener('click',function(){p.sessions=p.sessions.filter(function(q){return q.id!==s.id});save();renderAll()});
+    c.appendChild(x);tr.appendChild(c);tb.appendChild(tr);
+  });
+  if(!list.length){var tr=document.createElement('tr');var c=document.createElement('td');c.colSpan=7;c.style.color='var(--muted)';c.textContent='Aucune journée enregistrée ce mois-ci. Appuyez sur le bouton vert pour commencer.';tr.appendChild(c);tb.appendChild(tr)}
+  var f=$('foot');f.textContent='';
+  if(list.length){var fr=document.createElement('tr');[['Total',''],['',''],['',''],[mins(tz),''],[dur(tp),''],[tl+' min',''],['','']].forEach(function(a){var c=document.createElement('td');c.textContent=a[0];fr.appendChild(c)});f.appendChild(fr)}
+  var hours=tp/3600000, base=hours*p.rate, pay=base+p.bonus-p.ded;
+  $('sHours').textContent=dur(tp);
+  $('sDays').textContent=Object.keys(days).length;
+  $('sLate').textContent=tl+' min';
+  $('sPause').textContent=dur(tz);
+  var nf=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  $('sPay').textContent=nf.format(pay)+' '+p.cur;
+  $('payDetail').textContent=nf.format(hours)+' h × '+nf.format(p.rate)+' '+p.cur+' = '+nf.format(base)+(p.bonus?' + primes '+nf.format(p.bonus):'')+(p.ded?' − retenues '+nf.format(p.ded):'')+(p.rate?'':'  (renseignez votre taux horaire dans les réglages)');
+}
+
+function renderLate(){
+  var p=P(),a=active(p);var el=$('lateInfo');
+  if(a){var l=lateMin(p,a);el.textContent=l>0?'Retard sur ce shift : '+l+' min (début prévu à '+p.plan+').':'Début prévu à '+p.plan+' : vous étiez à l\'heure.'}
+  else el.textContent='Shift prévu de '+p.plan+' à '+p.planEnd+' avec '+p.planPause+' min de pause'+(p.tol?' (tolérance de retard '+p.tol+' min)':'')+'.';
+}
+
+function renderAll(){renderTabs();renderLive();renderMonth();renderLate();renderSheet()}
+
+$('bGo').addEventListener('click',function(){
+  var p=P(),a=active(p),now=Date.now();
+  if(!a){p.sessions.push({id:uid(),start:now,end:null,pauses:[]});logEv(p,now,'Début de shift')}
+  else if(onPause(a)){a.pauses[a.pauses.length-1].e=now;logEv(p,now,'Reprise')}
+  save();renderAll();
+});
+$('bPause').addEventListener('click',function(){
+  var a=active(P());if(a&&!onPause(a)){var t=Date.now();a.pauses.push({s:t,e:null});logEv(P(),t,'Pause')}
+  save();renderAll();
+});
+$('bStop').addEventListener('click',function(){
+  var a=active(P()),now=Date.now();
+  if(a){
+    if(onPause(a))a.pauses[a.pauses.length-1].e=now;
+    var p=P();
+    if(p.autoPause&&!a.pauses.length){var d=Math.min(p.planPause*60000,Math.floor((now-a.start)/2));if(d>0)a.pauses.push({s:now-d,e:now,auto:true})}
+    a.end=now;
+    logEv(p,now,'Fin de shift');syncDay(p,a);
+  }
+  save();renderAll();
+});
+
+function loadSettings(){var p=P();$('fName').value=p.name;$('fRate').value=p.rate||'';$('fCur').value=p.cur;$('fPlan').value=p.plan;$('fPlanEnd').value=p.planEnd;$('fPlanPause').value=p.planPause;$('fAuto').checked=!!p.autoPause;$('mPause').value=p.planPause;$('fSheet').value=S.sheet||'';$('fScript').value=S.script||'';$('fKey').value=S.key||'';$('fTol').value=p.tol||0;$('fBonus').value=p.bonus||'';$('fDed').value=p.ded||''}
+function bind(id,fn){$(id).addEventListener('input',function(){fn(this.value);save();renderAll()})}
+bind('fName',function(v){P().name=v||('Conseiller '+(S.cur+1))});
+bind('fRate',function(v){P().rate=parseFloat(v)||0});
+bind('fCur',function(v){P().cur=v||'MAD'});
+bind('fPlan',function(v){if(v)P().plan=v});
+bind('fPlanEnd',function(v){if(v)P().planEnd=v});
+bind('fPlanPause',function(v){P().planPause=Math.max(0,parseInt(v,10)||0)});
+$('fAuto').addEventListener('change',function(){P().autoPause=this.checked;save()});
+bind('fTol',function(v){P().tol=Math.max(0,parseInt(v,10)||0)});
+bind('fBonus',function(v){P().bonus=parseFloat(v)||0});
+bind('fDed',function(v){P().ded=parseFloat(v)||0});
+$('month').addEventListener('input',renderMonth);
+
+$('mAdd').addEventListener('click',function(){
+  var d=$('mDate').value,s=$('mStart').value,e=$('mEnd').value,pz=parseInt($('mPause').value,10)||0,msg=$('mMsg');
+  if(!d||!s||!e){msg.textContent='Remplissez la date, le début et la fin.';return}
+  var dp=d.split('-').map(Number),sp=s.split(':').map(Number),ep=e.split(':').map(Number);
+  var st=toEpoch(dp[0],dp[1],dp[2],sp[0],sp[1]),en=toEpoch(dp[0],dp[1],dp[2],ep[0],ep[1]);
+  if(en<=st)en+=86400000;
+  if(en-st<=pz*60000){msg.textContent='La pause dépasse la durée du shift.';return}
+  var pauses=pz>0?[{s:st+Math.floor((en-st)/2),e:st+Math.floor((en-st)/2)+pz*60000}]:[];
+  var ns={id:uid(),start:st,end:en,pauses:pauses};
+  P().sessions.push(ns);syncDay(P(),ns);
+  P().sessions.sort(function(a,b){return a.start-b.start});
+  save();msg.textContent='Journée ajoutée.';$('month').value=monthKey(st);renderAll();
+});
+
+$('bkCopy').addEventListener('click',function(){
+  var ta=$('bk');ta.value=JSON.stringify(S);ta.select();
+  var m=$('bkMsg');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ta.value).then(function(){m.textContent='Copié.'},function(){m.textContent='Texte sélectionné : copiez-le avec Ctrl+C.'})}
+  else m.textContent='Texte sélectionné : copiez-le avec Ctrl+C.';
+});
+$('bkLoad').addEventListener('click',function(){
+  var m=$('bkMsg');
+  try{var o=JSON.parse($('bk').value);if(!o||!o.p||o.p.length!==2)throw 0;S=o;S.cur=S.cur||0;save();loadSettings();renderAll();m.textContent='Données restaurées.'}
+  catch(e){m.textContent='Texte de sauvegarde invalide.'}
+});
+
+/* ---- Google Sheets : une ligne ajoutée à chaque bouton, une ligne récap à chaque fin de shift ---- */
+var SERVER='Google Sheets',SHEET_EV='Pointage',SHEET_DAY='Journees';
+var ERR={
+  no_sheet:'Collez le lien de votre feuille (page en ligne) ou celui du script Apps Script (fichier du bureau).',
+  no_mcp:'Dans le fichier du bureau, collez le lien du script Apps Script (qui se termine par /exec). « Préparer la feuille » marche seulement dans la page en ligne.',
+  needs_reauth:'Reconnectez Google Sheets dans Paramètres, Connecteurs de claude.ai.',
+  server_not_connected:'Ajoutez Google Sheets dans Paramètres, Connecteurs de claude.ai.',
+  selection_required:'Choisissez le compte Google Sheets à utiliser quand claude.ai le demande.',
+  not_in_manifest:"Google Sheets n'est pas autorisé pour cette page. Autorisez-le dans les permissions de la page.",
+  approval_required:"Google Sheets attend votre autorisation pour cette page. Appuyez sur « Renvoyer » et acceptez.",
+  blocked_by_policy:'Votre organisation bloque Google Sheets pour cette page.',
+  tool_error:"Google Sheets a refusé l'écriture. Vérifiez le lien puis appuyez sur « Préparer la feuille ».",
+  server_unavailable:'Google Sheets ne répond pas. Réessayez avec « Renvoyer ».',
+  other:"L'envoi a échoué. Réessayez avec « Renvoyer »."
+};
+S.outbox=S.outbox||[];
+S.outbox.forEach(function(i){if(i.st==='sending')i.st='failed'});
+var lastErr=null,mcpP=null;
+function getMcp(){
+  if(!mcpP){mcpP=(window.claude&&typeof window.claude.use==='function')?window.claude.use('mcp').then(function(m){return m||null},function(){return null}):Promise.resolve(null)}
+  return mcpP;
+}
+function sheetId(){var v=(S.sheet||'').trim();var m=v.match(/\/d\/([a-zA-Z0-9_-]+)/);if(m)return m[1];return /^[a-zA-Z0-9_-]{20,}$/.test(v)?v:''}
+function stamp(ms){return dayKey(ms)+' '+hms(ms)}
+function logEv(p,ms,ev){queue(SHEET_EV+'!A:C',[stamp(ms),p.name,ev])}
+function syncDay(p,s){
+  var now=Date.now(),pr=prodMs(s,now);
+  queue(SHEET_DAY+'!A:H',[dayKey(s.start),p.name,hm(s.start),s.end==null?'':hm(s.end),Math.round(pauseMs(s,now)/60000),Math.round(pr/60000),Math.round(pr/3600000*100)/100,lateMin(p,s)]);
+}
+function queue(range,row){var it={id:uid(),range:range,values:[row],st:'new'};S.outbox.push(it);save();sendItem(it)}
+function sendItem(it){
+  it.st='sending';save();renderSheet();
+  return getMcp().then(function(m){
+    var id=sheetId();
+    if(m&&id)return m.callTool(SERVER,'append_values',{spreadsheetId:id,range:it.range,values:it.values});
+    if((S.script||'').trim())return postScript(it);
+    if(!m)throw {code:'no_mcp'};
+    throw {code:'no_sheet'};
+  }).then(function(){
+    S.outbox=S.outbox.filter(function(x){return x.id!==it.id});lastErr=null;save();renderSheet();
+  },function(e){
+    it.st='failed';lastErr=(e&&e.code)||'other';save();renderSheet();
+  });
+}
+function flush(){
+  lastErr=null;
+  var chain=Promise.resolve();
+  S.outbox.filter(function(i){return i.st==='failed'}).forEach(function(it){
+    chain=chain.then(function(){if(lastErr)return null;return sendItem(it)});
+  });
+}
+function renderSheet(){
+  var n=S.outbox.length,id=sheetId()||(S.script||'').trim(),sending=S.outbox.some(function(i){return i.st==='sending'});
+  var failed=S.outbox.filter(function(i){return i.st==='failed'}).length;
+  $('sheetFlush').hidden=!failed;
+  $('sheetFlush').textContent='Renvoyer ('+failed+')';
+  var t;
+  if(!id)t='Aucune feuille liée';else if(lastErr)t='Envoi en échec';else if(sending)t='Envoi en cours';else if(n)t=n+' en attente';else t='Synchronisé';
+  $('sheetState').textContent=t;
+  if(lastErr)$('sheetMsg').textContent=ERR[lastErr]||ERR.other;
+  else if(!id)$('sheetMsg').textContent=ERR.no_sheet;
+  else if(!$('sheetMsg').dataset.keep)$('sheetMsg').textContent='';
+}
+$('fSheet').addEventListener('input',function(){S.sheet=this.value;save();renderSheet()});
+$('fScript').addEventListener('input',function(){S.script=this.value;save();renderSheet()});
+$('fKey').addEventListener('input',function(){S.key=this.value;save()});
+function postScript(it){
+  return fetch((S.script||'').trim(),{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:S.key||'',tab:it.range.split('!')[0],row:it.values[0]})});
+}
+$('sheetFlush').addEventListener('click',flush);
+$('sheetPrep').addEventListener('click',function(){
+  var msg=$('sheetMsg'),id=sheetId(),M;
+  if(!id){lastErr='no_sheet';renderSheet();return}
+  lastErr=null;msg.dataset.keep='1';msg.textContent='Préparation de la feuille…';
+  getMcp().then(function(m){
+    if(!m)throw {code:'no_mcp'};
+    M=m;
+    return m.callTool(SERVER,'get_spreadsheet',{spreadsheetId:id,fields:['sheets.properties.title']});
+  }).then(function(r){
+    var raw=typeof r.payload==='string'?r.payload:JSON.stringify(r.payload!=null?r.payload:r.content);
+    var titles=[],re=/"title"\s*:\s*"([^"]+)"/g,x;
+    while((x=re.exec(raw)))titles.push(x[1]);
+    var need=[SHEET_EV,SHEET_DAY].filter(function(t){return titles.indexOf(t)<0});
+    if(!need.length)return need;
+    return M.callTool(SERVER,'update_spreadsheet',{spreadsheetId:id,requests:need.map(function(t){return {addSheet:{properties:{title:t}}}})}).then(function(){return need});
+  }).then(function(need){
+    var heads={};
+    heads[SHEET_EV]=[['Horodatage (Maroc)','Profil','Événement']];
+    heads[SHEET_DAY]=[['Date','Profil','Début','Fin','Pause (min)','Production (min)','Production (h)','Retard (min)']];
+    var chain=Promise.resolve();
+    need.forEach(function(t){
+      var last=String.fromCharCode(64+heads[t][0].length);
+      chain=chain.then(function(){return M.callTool(SERVER,'update_values',{spreadsheetId:id,range:t+'!A1:'+last+'1',values:heads[t]})});
+    });
+    return chain.then(function(){return need});
+  }).then(function(need){
+    lastErr=null;
+    msg.textContent=need.length?'Feuille prête : onglets '+need.join(' et ')+' créés.':'Feuille prête : les onglets existent déjà.';
+    renderSheet();
+  },function(e){
+    lastErr=(e&&e.code)||'other';delete msg.dataset.keep;renderSheet();
+  });
+});
+
+$('month').value=monthKey(Date.now());
+$('mDate').value=dayKey(Date.now());
+loadSettings();renderAll();
+setInterval(renderLive,1000);
+setInterval(renderMonth,30000);
+})();
+</script>
