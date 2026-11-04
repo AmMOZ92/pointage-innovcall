@@ -66,11 +66,11 @@ tfoot td{font-weight:600;border-bottom:0}
 .small{font-size:13px;color:var(--muted)}
 .ghost{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;border-radius:8px;cursor:pointer}
 .ghost.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.ghost.danger{background:var(--stop);border-color:var(--stop);color:var(--stop-fg)}
 textarea{width:100%;min-height:70px;font-family:var(--mono);font-size:12px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
 details summary{cursor:pointer;font-weight:600}
 details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 
-/* Style de l'écran de Login */
 .login-screen{max-width:400px;margin:60px auto;display:flex;flex-direction:column;gap:16px}
 .login-header{text-align:center;margin-bottom:10px}
 .login-header h1{font-size:22px;color:var(--accent)}
@@ -81,7 +81,7 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 </head>
 <body>
 
-<!-- ECAN DE LOGIN -->
+<!-- ECRAN DE LOGIN -->
 <div id="loginSection" class="login-screen">
   <div class="card">
     <div class="login-header">
@@ -105,7 +105,10 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 <div id="appSection" class="wrap" style="display:none">
   <div class="user-bar">
     <span>Connecté en tant que : <b id="loggedInName">Conseiller</b></span>
-    <button class="ghost" id="bLogout" style="padding:4px 10px;font-size:12px">Déconnexion</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="ghost primary" id="bMini" style="padding:4px 10px;font-size:12px">Mode Mini (Pop-up)</button>
+      <button class="ghost" id="bLogout" style="padding:4px 10px;font-size:12px">Déconnexion</button>
+    </div>
   </div>
 
   <div class="card top">
@@ -132,7 +135,7 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
     <div class="small" id="lateInfo"></div>
   </div>
 
-  <!-- GOOGLE SHEETS SYSTEM -->
+  <!-- GOOGLE SHEETS SYNC STATUS -->
   <div class="card">
     <div class="row" style="margin-bottom:8px">
       <h2>Google Sheets</h2>
@@ -169,71 +172,45 @@ details>div{margin-top:12px;display:flex;flex-direction:column;gap:12px}
       </table>
     </div>
   </div>
-
-  <div class="card">
-    <details>
-      <summary>Réglages du conseiller</summary>
-      <div>
-        <div class="grid">
-          <label>Nom du profil<input id="fName" type="text"></label>
-          <label>Taux horaire<input id="fRate" type="number" min="0" step="0.01" inputmode="decimal"></label>
-          <label>Devise<input id="fCur" type="text" maxlength="6"></label>
-          <label>Heure de début prévue<input id="fPlan" type="time"></label>
-          <label>Heure de fin prévue<input id="fPlanEnd" type="time"></label>
-          <label>Pause prévue (minutes)<input id="fPlanPause" type="number" min="0" step="5" inputmode="numeric"></label>
-          <label>Tolérance de retard (min)<input id="fTol" type="number" min="0" step="1" inputmode="numeric"></label>
-          <label>Primes du mois<input id="fBonus" type="number" min="0" step="0.01" inputmode="decimal"></label>
-          <label>Retenues du mois<input id="fDed" type="number" min="0" step="0.01" inputmode="decimal"></label>
-        </div>
-        <label style="flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--fg);margin-top:10px">
-          <input id="fAuto" type="checkbox" style="width:auto"> Déduire automatiquement la pause prévue si je n'appuie pas sur le bouton jaune
-        </label>
-      </div>
-    </details>
-  </div>
-
-  <div class="card">
-    <details>
-      <summary>Sauvegarde des données</summary>
-      <div>
-        <div class="small">Les données restent enregistrées dans votre navigateur.</div>
-        <textarea id="bk" aria-label="Sauvegarde"></textarea>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="ghost" id="bkCopy">Copier la sauvegarde</button>
-          <button class="ghost" id="bkLoad">Restaurer depuis le texte</button>
-          <span class="small" id="bkMsg"></span>
-        </div>
-      </div>
-    </details>
-  </div>
 </div>
 
 <script>
 (function(){
-// CONFIGURATION INTEGRÉE DU SCRIPT ET DE LA FEUILLE
 var CONFIG = {
   sheetUrl: "https://docs.google.com/spreadsheets/d/1HhmyIfsSy4bIeOMMR3lAsDXgsndcdqzxf10D97mT1TI/edit#gid=654289880",
   scriptUrl: "https://script.google.com/macros/s/AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM/exec",
   secretKey: "AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM"
 };
 
-// BASE DES UTILISATEURS (COMPTES TELECONSEILLERS)
 var USERS = {
   "conseiller1": { pass: "1234", profileIndex: 0, defaultName: "Conseiller 1" },
   "conseiller2": { pass: "1234", profileIndex: 1, defaultName: "Conseiller 2" }
 };
 
-var TZ='Africa/Casablanca', KEY='pointage-teleconseiller-v1';
+var TZ='Africa/Casablanca', KEY='pointage-teleconseiller-v2';
 var dtf=new Intl.DateTimeFormat('en-GB',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
 function parts(ms){var o={};dtf.formatToParts(new Date(ms)).forEach(function(p){if(p.type!=='literal')o[p.type]=parseInt(p.value,10)});return o}
 function offsetAt(ms){var p=parts(ms);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ms/1000)*1000}
-function toEpoch(y,mo,d,h,mi){var g=Date.UTC(y,mo-1,d,h,mi,0);var e=g-offsetAt(g);e=g-offsetAt(e);return e}
 function pad(n){return n<10?'0'+n:''+n}
 function hms(ms){var p=parts(ms);return pad(p.hour)+':'+pad(p.minute)+':'+pad(p.second)}
 function hm(ms){var p=parts(ms);return pad(p.hour)+':'+pad(p.minute)}
 function dayKey(ms){var p=parts(ms);return p.year+'-'+pad(p.month)+'-'+pad(p.day)}
 function monthKey(ms){var p=parts(ms);return p.year+'-'+pad(p.month)}
 function minOfDay(ms){var p=parts(ms);return p.hour*60+p.minute}
+
+function isWeekend(ms){
+  var d = new Date(ms);
+  var dayStr = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' }).format(d);
+  return (dayStr === 'Sat' || dayStr === 'Sun' || dayStr === 'sam.' || dayStr === 'dim.');
+}
+
+function getPlannedHours(ms, p){
+  if(isWeekend(ms)){
+    return { start: "13:00", end: "23:00", pause: 60 };
+  }
+  return { start: p.plan || "14:00", end: p.planEnd || "00:00", pause: p.planPause || 60 };
+}
+
 var dayFmt=new Intl.DateTimeFormat('fr-FR',{timeZone:TZ,weekday:'long',day:'numeric',month:'long',year:'numeric'});
 var shortFmt=new Intl.DateTimeFormat('fr-FR',{timeZone:TZ,weekday:'short',day:'2-digit',month:'2-digit'});
 function dur(ms){var m=Math.max(0,Math.round(ms/60000));return Math.floor(m/60)+'h '+pad(m%60)+'min'}
@@ -252,7 +229,6 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function P(){return S.p[S.cur]}
 function $(id){return document.getElementById(id)}
 
-// GESTION DU LOGIN
 var currentUser = null;
 $('loginForm').addEventListener('submit', function(e){
   e.preventDefault();
@@ -265,7 +241,6 @@ $('loginForm').addEventListener('submit', function(e){
     $('loginSection').style.display = 'none';
     $('appSection').style.display = 'flex';
     $('loggedInName').textContent = P().name || USERS[u].defaultName;
-    loadSettings();
     renderAll();
   } else {
     $('loginErr').textContent = "Identifiant ou mot de passe incorrect.";
@@ -281,33 +256,68 @@ $('bLogout').addEventListener('click', function(){
   $('loginSection').style.display = 'flex';
 });
 
+// BOUTON MODE MINI (POP-UP)
+$('bMini').addEventListener('click', function(){
+  var w = 380, h = 520;
+  var left = (screen.width/2) - (w/2);
+  var top = (screen.height/2) - (h/2);
+  var popWindow = window.open(window.location.href, 'PointageMini', 'width='+w+',height='+h+',top='+top+',left='+left+',menubar=no,toolbar=no,location=no,status=no');
+});
+
 function active(p){var s=p.sessions[p.sessions.length-1];return s&&s.end==null?s:null}
 function pauseMs(s,now){var t=0;s.pauses.forEach(function(q){t+=(q.e==null?now:q.e)-q.s});return t}
 function prodMs(s,now){var e=s.end==null?now:s.end;return Math.max(0,e-s.start-pauseMs(s,now))}
-function lateMin(p,s){var pl=p.plan.split(':');var plan=parseInt(pl[0],10)*60+parseInt(pl[1],10);var l=minOfDay(s.start)-plan;return l>p.tol?l:0}
+
+function lateMin(p,s){
+  var planObj = getPlannedHours(s.start, p);
+  var pl = planObj.start.split(':');
+  var plan = parseInt(pl[0],10)*60+parseInt(pl[1],10);
+  var l = minOfDay(s.start)-plan;
+  return l>p.tol?l:0;
+}
+
 function onPause(s){var q=s.pauses[s.pauses.length-1];return q&&q.e==null}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
 function renderLive(){
   var now=Date.now(),p=P(),a=active(p);
-  $('clock').textContent=hms(now);
-  $('date').textContent=dayFmt.format(new Date(now));
-  var pill=$('pill');pill.className='pill';
+  if($('clock')) $('clock').textContent=hms(now);
+  if($('date')) $('date').textContent=dayFmt.format(new Date(now));
+  var pill=$('pill');
+  if(pill) pill.className='pill';
   var bGo=$('bGo'),bP=$('bPause'),bS=$('bStop');
-  if(!a){pill.classList.add('off');$('pilltxt').textContent='Hors shift';bGo.firstChild.nodeValue='Début de shift';bGo.disabled=false;bP.disabled=true;bS.disabled=true}
-  else if(onPause(a)){pill.classList.add('brk');$('pilltxt').textContent='En pause depuis '+hm(a.pauses[a.pauses.length-1].s);bGo.firstChild.nodeValue='Reprendre';bGo.disabled=false;bP.disabled=true;bS.disabled=false}
-  else{pill.classList.add('work');$('pilltxt').textContent='En shift depuis '+hm(a.start);bGo.firstChild.nodeValue='En shift';bGo.disabled=true;bP.disabled=false;bS.disabled=false}
+  if(!a){
+    if(pill) pill.classList.add('off');
+    if($('pilltxt')) $('pilltxt').textContent='Hors shift';
+    if(bGo){bGo.firstChild.nodeValue='Début de shift';bGo.disabled=false;}
+    if(bP) bP.disabled=true;
+    if(bS) bS.disabled=true;
+  } else if(onPause(a)){
+    if(pill) pill.classList.add('brk');
+    if($('pilltxt')) $('pilltxt').textContent='En pause depuis '+hm(a.pauses[a.pauses.length-1].s);
+    if(bGo){bGo.firstChild.nodeValue='Reprendre';bGo.disabled=false;}
+    if(bP) bP.disabled=true;
+    if(bS) bS.disabled=false;
+  } else {
+    if(pill) pill.classList.add('work');
+    if($('pilltxt')) $('pilltxt').textContent='En shift depuis '+hm(a.start);
+    if(bGo){bGo.firstChild.nodeValue='En shift';bGo.disabled=true;}
+    if(bP) bP.disabled=false;
+    if(bS) bS.disabled=false;
+  }
   var dk=dayKey(now),prod=0,pz=0,cur=0;
   p.sessions.forEach(function(s){if(dayKey(s.start)===dk){prod+=prodMs(s,now);pz+=pauseMs(s,now)}});
   if(a&&onPause(a))cur=now-a.pauses[a.pauses.length-1].s;
-  $('liveProd').textContent=dur(prod);
-  $('livePause').textContent=(a&&onPause(a)?mins(cur)+' / ':'')+mins(pz);
+  if($('liveProd')) $('liveProd').textContent=dur(prod);
+  if($('livePause')) $('livePause').textContent=(a&&onPause(a)?mins(cur)+' / ':'')+mins(pz);
 }
 
 function renderMonth(){
-  var p=P(),mk=$('month').value,now=Date.now();
+  var p=P(),mk=$('month')?$('month').value:monthKey(Date.now()),now=Date.now();
   var list=p.sessions.filter(function(s){return monthKey(s.start)===mk}).sort(function(a,b){return a.start-b.start});
-  var tb=$('rows');tb.textContent='';
+  var tb=$('rows');
+  if(!tb) return;
+  tb.textContent='';
   var tp=0,tz=0,tl=0,days={};
   list.forEach(function(s){
     var pr=prodMs(s,now),pz=pauseMs(s,now),l=lateMin(p,s);
@@ -321,27 +331,37 @@ function renderMonth(){
     td(dur(pr));
     td(l>0?'+'+l+' min':'—',l>0?'late':'');
     var c=document.createElement('td');
-    var x=document.createElement('button');x.type='button';x.className='x';x.textContent='Supprimer';x.setAttribute('aria-label','Supprimer la journée du '+shortFmt.format(new Date(s.start)));
+    var x=document.createElement('button');x.type='button';x.className='x';x.textContent='Supprimer';
     x.addEventListener('click',function(){p.sessions=p.sessions.filter(function(q){return q.id!==s.id});save();renderAll()});
     c.appendChild(x);tr.appendChild(c);tb.appendChild(tr);
   });
-  if(!list.length){var tr=document.createElement('tr');var c=document.createElement('td');c.colSpan=7;c.style.color='var(--muted)';c.textContent='Aucune journée enregistrée ce mois-ci. Appuyez sur le bouton vert pour commencer.';tr.appendChild(c);tb.appendChild(tr)}
-  var f=$('foot');f.textContent='';
-  if(list.length){var fr=document.createElement('tr');[['Total',''],['',''],['',''],[mins(tz),''],[dur(tp),''],[tl+' min',''],['','']].forEach(function(a){var c=document.createElement('td');c.textContent=a[0];fr.appendChild(c)});f.appendChild(fr)}
+  if(!list.length){var tr=document.createElement('tr');var c=document.createElement('td');c.colSpan=7;c.style.color='var(--muted)';c.textContent='Aucune journée enregistrée ce mois-ci.';tr.appendChild(c);tb.appendChild(tr)}
+  var f=$('foot');
+  if(f){
+    f.textContent='';
+    if(list.length){var fr=document.createElement('tr');[['Total',''],['',''],['',''],[mins(tz),''],[dur(tp),''],[tl+' min',''],['','']].forEach(function(a){var c=document.createElement('td');c.textContent=a[0];fr.appendChild(c)});f.appendChild(fr)}
+  }
   var hours=tp/3600000, base=hours*p.rate, pay=base+p.bonus-p.ded;
-  $('sHours').textContent=dur(tp);
-  $('sDays').textContent=Object.keys(days).length;
-  $('sLate').textContent=tl+' min';
-  $('sPause').textContent=dur(tz);
+  if($('sHours')) $('sHours').textContent=dur(tp);
+  if($('sDays')) $('sDays').textContent=Object.keys(days).length;
+  if($('sLate')) $('sLate').textContent=tl+' min';
+  if($('sPause')) $('sPause').textContent=dur(tz);
   var nf=new Intl.NumberFormat('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  $('sPay').textContent=nf.format(pay)+' '+p.cur;
-  $('payDetail').textContent=nf.format(hours)+' h × '+nf.format(p.rate)+' '+p.cur+' = '+nf.format(base)+(p.bonus?' + primes '+nf.format(p.bonus):'')+(p.ded?' − retenues '+nf.format(p.ded):'');
+  if($('sPay')) $('sPay').textContent=nf.format(pay)+' '+p.cur;
+  if($('payDetail')) $('payDetail').textContent=nf.format(hours)+' h × '+nf.format(p.rate)+' '+p.cur+' = '+nf.format(base);
 }
 
 function renderLate(){
   var p=P(),a=active(p);var el=$('lateInfo');
-  if(a){var l=lateMin(p,a);el.textContent=l>0?'Retard sur ce shift : '+l+' min (début prévu à '+p.plan+').':'Début prévu à '+p.plan+' : vous étiez à l\'heure.'}
-  else el.textContent='Shift prévu de '+p.plan+' à '+p.planEnd+' avec '+p.planPause+' min de pause'+(p.tol?' (tolérance de retard '+p.tol+' min)':'')+'.';
+  if(!el) return;
+  if(a){
+    var planObj = getPlannedHours(a.start, p);
+    var l=lateMin(p,a);
+    el.textContent=l>0?'Retard : '+l+' min (prévu à '+planObj.start+').':'À l\'heure (prévu à '+planObj.start+').';
+  } else {
+    var planObj = getPlannedHours(Date.now(), p);
+    el.textContent='Shift prévu de '+planObj.start+' à '+planObj.end+(isWeekend(Date.now())?' (Week-end 10h)':'')+'.';
+  }
 }
 
 function renderAll(){renderLive();renderMonth();renderLate();renderSheet()}
@@ -361,53 +381,17 @@ $('bStop').addEventListener('click',function(){
   if(a){
     if(onPause(a))a.pauses[a.pauses.length-1].e=now;
     var p=P();
-    if(p.autoPause&&!a.pauses.length){var d=Math.min(p.planPause*60000,Math.floor((now-a.start)/2));if(d>0)a.pauses.push({s:now-d,e:now,auto:true})}
+    var planObj = getPlannedHours(a.start, p);
+    if(p.autoPause&&!a.pauses.length){var d=Math.min(planObj.pause*60000,Math.floor((now-a.start)/2));if(d>0)a.pauses.push({s:now-d,e:now,auto:true})}
     a.end=now;
     logEv(p,now,'Fin de shift');syncDay(p,a);
   }
   save();renderAll();
 });
 
-function loadSettings(){
-  var p=P();
-  $('fName').value=p.name;
-  $('fRate').value=p.rate||'';
-  $('fCur').value=p.cur;
-  $('fPlan').value=p.plan;
-  $('fPlanEnd').value=p.planEnd;
-  $('fPlanPause').value=p.planPause;
-  $('fAuto').checked=!!p.autoPause;
-  $('fTol').value=p.tol||0;
-  $('fBonus').value=p.bonus||'';
-  $('fDed').value=p.ded||'';
-}
+if($('month')) $('month').addEventListener('input',renderMonth);
 
-function bind(id,fn){$(id).addEventListener('input',function(){fn(this.value);save();renderAll()})}
-bind('fName',function(v){P().name=v||('Conseiller '+(S.cur+1));if(currentUser)$('loggedInName').textContent=P().name});
-bind('fRate',function(v){P().rate=parseFloat(v)||0});
-bind('fCur',function(v){P().cur=v||'MAD'});
-bind('fPlan',function(v){if(v)P().plan=v});
-bind('fPlanEnd',function(v){if(v)P().planEnd=v});
-bind('fPlanPause',function(v){P().planPause=Math.max(0,parseInt(v,10)||0)});
-$('fAuto').addEventListener('change',function(){P().autoPause=this.checked;save()});
-bind('fTol',function(v){P().tol=Math.max(0,parseInt(v,10)||0)});
-bind('fBonus',function(v){P().bonus=parseFloat(v)||0});
-bind('fDed',function(v){P().ded=parseFloat(v)||0});
-$('month').addEventListener('input',renderMonth);
-
-$('bkCopy').addEventListener('click',function(){
-  var ta=$('bk');ta.value=JSON.stringify(S);ta.select();
-  var m=$('bkMsg');
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ta.value).then(function(){m.textContent='Copié.'},function(){m.textContent='Texte sélectionné : copiez-le avec Ctrl+C.'})}
-  else m.textContent='Texte sélectionné : copiez-le avec Ctrl+C.';
-});
-$('bkLoad').addEventListener('click',function(){
-  var m=$('bkMsg');
-  try{var o=JSON.parse($('bk').value);if(!o||!o.p||o.p.length!==2)throw 0;S=o;save();loadSettings();renderAll();m.textContent='Données restaurées.'}
-  catch(e){m.textContent='Texte de sauvegarde invalide.'}
-});
-
-/* ---- GOOGLE SHEETS SYNC VIA APPS SCRIPT ---- */
+/* ---- GOOGLE SHEETS SYNC ---- */
 var SHEET_EV='Pointage',SHEET_DAY='Journees';
 S.outbox=S.outbox||[];
 S.outbox.forEach(function(i){if(i.st==='sending')i.st='failed'});
@@ -450,15 +434,27 @@ function flush(){
 function renderSheet(){
   var n=S.outbox.length,sending=S.outbox.some(function(i){return i.st==='sending'});
   var failed=S.outbox.filter(function(i){return i.st==='failed'}).length;
-  $('sheetFlush').hidden=!failed;
-  $('sheetFlush').textContent='Renvoyer ('+failed+')';
+  if($('sheetFlush')) {
+    $('sheetFlush').hidden=!failed;
+    $('sheetFlush').textContent='Renvoyer ('+failed+')';
+  }
   var t;
   if(lastErr)t='Envoi en échec';else if(sending)t='Envoi en cours';else if(n)t=n+' en attente';else t='Synchronisé';
-  $('sheetState').textContent=t;
+  if($('sheetState')) $('sheetState').textContent=t;
 }
 
-$('sheetFlush').addEventListener('click',flush);
-$('month').value=monthKey(Date.now());
+if($('sheetFlush')) $('sheetFlush').addEventListener('click',flush);
+if($('month')) $('month').value=monthKey(Date.now());
+
+// Auto-connexion directe si ouvert depuis le mode pop-up ou session active
+if(S.cur != null){
+  $('loginSection').style.display = 'none';
+  $('appSection').style.display = 'flex';
+  var uKey = Object.keys(USERS).find(function(k){return USERS[k].profileIndex === S.cur});
+  if(uKey) $('loggedInName').textContent = P().name || USERS[uKey].defaultName;
+  renderAll();
+}
+
 setInterval(renderLive,1000);
 setInterval(renderMonth,30000);
 })();
