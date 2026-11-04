@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>INNOVCALL - Espace Administration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root { --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --accent:#7aa8e8; --line:#2e3846; --stop:#ec5b5b; --muted:#9aa6b6; }
+  body { background:var(--bg); color:var(--fg); font-family:'IBM Plex Sans',sans-serif; padding:20px; margin:0; }
+  .wrap { max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:20px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  h1 { font-size:20px; color:var(--accent); margin:0 0 10px 0; }
+  label { display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted); margin-bottom:10px; }
+  input, select { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font:inherit; }
+  button { background:var(--accent); color:var(--bg); border:none; border-radius:6px; padding:10px 16px; font-weight:600; cursor:pointer; }
+  button.danger { background:var(--stop); color:#fff; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
+  th, td { border-bottom:1px solid var(--line); padding:8px; text-align:left; }
+  th { color:var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="adminLogin" class="wrap" style="max-width:400px; margin-top:60px;">
+  <div class="card">
+    <h1>Connexion Administration</h1>
+    <form id="formAdminLogin">
+      <label>Courriel Administrateur
+        <input type="email" id="adminEmail" required placeholder="falldiagne28@gmail.com">
+      </label>
+      <label>Mot de passe Admin
+        <input type="password" id="adminPass" required placeholder="••••••••">
+      </label>
+      <button type="submit" style="width:100%; margin-top:10px;">Se connecter au Panel</button>
+      <div id="loginErr" style="color:var(--stop); font-size:13px; margin-top:10px;"></div>
+    </form>
+  </div>
+</div>
+
+<div id="adminPanel" class="wrap" style="display:none;">
+  <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <h1>Panel Admin INNOVCALL</h1>
+      <span style="font-size:12px; color:var(--muted)">Session : <b id="currentAdminEmail"></b></span>
+    </div>
+    <button id="btnLogout" style="background:transparent; border:1px solid var(--line); color:var(--fg);">Déconnexion</button>
+  </div>
+
+  <!-- SELECTION DU PROFIL A GERER -->
+  <div class="card">
+    <h3>Gestion du Profil</h3>
+    <label>Sélectionner le conseiller à modifier :
+      <select id="selectProfile">
+        <option value="Conseiller 1">Conseiller 1 (Profil 1)</option>
+        <option value="Conseiller 2">Conseiller 2 (Profil 2)</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- INTERFACE DE MODIFICATION DES JOURNEES -->
+  <div class="card">
+    <h3>Ajouter ou Corriger une Journée</h3>
+    <div class="grid">
+      <label>Date<input type="date" id="mDate"></label>
+      <label>Début<input type="time" id="mStart"></label>
+      <label>Fin<input type="time" id="mEnd"></label>
+      <label>Pause (min)<input type="number" id="mPause" value="60"></label>
+    </div>
+    <button id="btnAddOverride" style="margin-top:12px;">Appliquer la modification</button>
+    <span id="msgOverride" style="font-size:13px; margin-left:10px;"></span>
+  </div>
+
+  <!-- REMISE A ZERO -->
+  <div class="card">
+    <h3>Zone de Danger</h3>
+    <p style="font-size:13px; color:var(--muted)">Efface les données de session du conseiller sélectionné et enregistre une trace dans l'audit.</p>
+    <button class="danger" id="btnReset">Remettre le compteur du conseiller à 0</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Liste des administrateurs autorisés
+  var ADMINS = {
+    "falldiagne28@gmail.com": "admin123",
+    "manager@innovcall.com": "admin123" // Ajoutez ici le 2ème courriel
+  };
+
+  var CONFIG = {
+    scriptUrl: "https://script.google.com/macros/s/AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM/exec",
+    secretKey: "AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM"
+  };
+
+  var activeAdmin = null;
+
+  document.getElementById('formAdminLogin').addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('adminEmail').value.trim().toLowerCase();
+    var pass = document.getElementById('adminPass').value.trim();
+
+    if(ADMINS[email] && ADMINS[email] === pass){
+      activeAdmin = email;
+      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+      document.getElementById('currentAdminEmail').textContent = activeAdmin;
+    } else {
+      document.getElementById('loginErr').textContent = "Accès refusé : courriel ou mot de passe invalide.";
+    }
+  });
+
+  document.getElementById('btnLogout').addEventListener('click', function(){
+    location.reload();
+  });
+
+  // Fonction pour envoyer les traces d'audit dans Google Sheets
+  function logAdminAction(targetProfile, action, details){
+    var nowStr = new Date().toLocaleString("fr-FR", {timeZone: "Africa/Casablanca"});
+    fetch(CONFIG.scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({
+        key: CONFIG.secretKey,
+        action: "admin_log",
+        timestamp: nowStr,
+        adminEmail: activeAdmin,
+        targetProfile: targetProfile,
+        adminAction: action,
+        details: details
+      })
+    });
+  }
+
+  // Action : Correction manuelle
+  document.getElementById('btnAddOverride').addEventListener('click', function(){
+    var prof = document.getElementById('selectProfile').value;
+    var d = document.getElementById('mDate').value;
+    var s = document.getElementById('mStart').value;
+    var e = document.getElementById('mEnd').value;
+    var pz = document.getElementById('mPause').value;
+
+    if(!d || !s || !e) { alert("Remplissez la date, le début et la fin."); return; }
+
+    var details = "Ajout/Correction journée du " + d + " (" + s + " à " + e + ", pause: " + pz + "min)";
+    logAdminAction(prof, "Modification Journée", details);
+    
+    document.getElementById('msgOverride').textContent = "Modification enregistrée dans le journal d'audit.";
+  });
+
+  // Action : Remise à zéro
+  document.getElementById('btnReset').addEventListener('click', function(){
+    var prof = document.getElementById('selectProfile').value;
+    if(confirm("Confirmer la remise à zéro des compteurs pour " + prof + " ? Cette action sera consignée dans les journaux.")){
+      logAdminAction(prof, "Remise à zéro", "Effacement de l'historique de production");
+      alert("Remise à zéro effectuée et enregistrée dans le journal.");
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
