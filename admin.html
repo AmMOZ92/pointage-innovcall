@@ -2,162 +2,456 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>INNOVCALL - Espace Administration</title>
+<title>Administration - INNOVCALL</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-  :root { --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --accent:#7aa8e8; --line:#2e3846; --stop:#ec5b5b; --muted:#9aa6b6; }
-  body { background:var(--bg); color:var(--fg); font-family:'IBM Plex Sans',sans-serif; padding:20px; margin:0; }
-  .wrap { max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:20px; }
-  .card { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px; }
-  h1 { font-size:20px; color:var(--accent); margin:0 0 10px 0; }
-  label { display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--muted); margin-bottom:10px; }
-  input, select { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:8px 10px; font:inherit; }
-  button { background:var(--accent); color:var(--bg); border:none; border-radius:6px; padding:10px 16px; font-weight:600; cursor:pointer; }
-  button.danger { background:var(--stop); color:#fff; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:13px; }
-  th, td { border-bottom:1px solid var(--line); padding:8px; text-align:left; }
-  th { color:var(--muted); }
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --fg:#1b2430; --muted:#5d6978; --line:#d5dbe3;
+  --accent:#2c5fa8; --accent-soft:#e3ecf8; --on-accent:#ffffff; --stop:#d63a3a; --stop-fg:#ffffff;
+  --late:#c0392b; --warn-bg:#fff4d6; --warn-fg:#6b4e00; --err-bg:#fde8e6; --err-fg:#8f1d12; --ok-bg:#e2f4e8; --ok-fg:#14532d;
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2e3846;
+  --accent:#7aa8e8; --accent-soft:#223149; --on-accent:#0d1520; --stop:#ec5b5b; --stop-fg:#2b0505;
+  --late:#ff8a7a; --warn-bg:#3a3010; --warn-fg:#f5d680; --err-bg:#3d1b18; --err-fg:#ffb4aa; --ok-bg:#16301f; --ok-fg:#9be3b1;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-size:20px;color:var(--accent)}
+h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.bar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+input,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0;width:100%}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;border-radius:8px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button.danger{background:var(--stop);border-color:var(--stop);color:var(--stop-fg)}
+button.small{padding:3px 9px;font-size:12px;font-weight:500}
+button:disabled{opacity:.6;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sum span{font-size:12px;color:var(--muted)}
+.sum b{font-family:var(--mono);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sum .big b{font-size:28px;color:var(--accent)}
+.tablebox{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:620px}
+th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:13px;vertical-align:top}
+td.txt{font-family:var(--font)}
+td.late{color:var(--late);font-weight:600}
+tfoot td{font-weight:600;border-bottom:0}
+.tag{display:inline-block;font-size:12px;font-family:var(--font);padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.tag.auto{background:var(--warn-bg);color:var(--warn-fg)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.note{font-size:13px;color:var(--muted)}
+.msg{margin-top:10px;padding:8px 12px;border-radius:8px;font-size:14px}
+.msg.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.msg.err{background:var(--err-bg);color:var(--err-fg)}
+.login{max-width:400px;margin:60px auto}
+.login-err{color:var(--late);font-size:13px;margin-top:10px;min-height:1em}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.danger-zone{border-color:var(--stop)}
 </style>
 </head>
 <body>
+<noscript>Cette page a besoin de JavaScript.</noscript>
 
-<div id="adminLogin" class="wrap" style="max-width:400px; margin-top:60px;">
+<main id="loginBox" class="login" hidden>
   <div class="card">
-    <h1>Connexion Administration</h1>
-    <form id="formAdminLogin">
-      <label>Courriel Administrateur
-        <input type="email" id="adminEmail" required placeholder="falldiagne28@gmail.com">
+    <h1 style="margin-bottom:12px">Connexion administration</h1>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:12px">
+      <label>Courriel administrateur
+        <input type="email" id="adminEmail" required autocomplete="username" autocapitalize="none" spellcheck="false">
       </label>
-      <label>Mot de passe Admin
-        <input type="password" id="adminPass" required placeholder="••••••••">
+      <label>Mot de passe
+        <input type="password" id="adminPass" required autocomplete="current-password">
       </label>
-      <button type="submit" style="width:100%; margin-top:10px;">Se connecter au Panel</button>
-      <div id="loginErr" style="color:var(--stop); font-size:13px; margin-top:10px;"></div>
+      <button type="submit" id="loginBtn" class="primary" style="padding:12px">Se connecter</button>
+      <div id="loginErr" class="login-err" role="alert"></div>
     </form>
   </div>
-</div>
+</main>
 
-<div id="adminPanel" class="wrap" style="display:none;">
-  <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+<div id="panel" class="wrap" hidden>
+  <div class="card bar">
     <div>
-      <h1>Panel Admin INNOVCALL</h1>
-      <span style="font-size:12px; color:var(--muted)">Session : <b id="currentAdminEmail"></b></span>
+      <h1>Panel admin INNOVCALL</h1>
+      <span class="note">Session : <b id="adminName"></b></span>
     </div>
-    <button id="btnLogout" style="background:transparent; border:1px solid var(--line); color:var(--fg);">Déconnexion</button>
+    <button id="btnLogout" type="button">Déconnexion</button>
   </div>
 
-  <!-- SELECTION DU PROFIL A GERER -->
   <div class="card">
-    <h3>Gestion du Profil</h3>
-    <label>Sélectionner le conseiller à modifier :
-      <select id="selectProfile">
-        <option value="Conseiller 1">Conseiller 1 (Profil 1)</option>
-        <option value="Conseiller 2">Conseiller 2 (Profil 2)</option>
-      </select>
-    </label>
+    <h2>Conseiller et mois</h2>
+    <div class="grid" style="align-items:end">
+      <label>Conseiller
+        <select id="selProfile"></select>
+      </label>
+      <label>Mois
+        <input type="month" id="month">
+      </label>
+      <div><button id="btnRefresh" type="button">Actualiser</button></div>
+    </div>
+    <div id="msgTop" class="msg err" role="alert" hidden></div>
   </div>
 
-  <!-- INTERFACE DE MODIFICATION DES JOURNEES -->
   <div class="card">
-    <h3>Ajouter ou Corriger une Journée</h3>
+    <h2>Bilan du mois</h2>
+    <div class="sum">
+      <div><span>Heures de production</span><b id="sHours">0h 00min</b></div>
+      <div><span>Jours travaillés</span><b id="sDays">0</b></div>
+      <div><span>Retards cumulés</span><b id="sLate">0 min</b></div>
+      <div><span>Pauses cumulées</span><b id="sPause">0h 00min</b></div>
+      <div class="big"><span>Salaire final estimé</span><b id="sPay">—</b></div>
+    </div>
+    <div class="note" id="payDetail" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card">
+    <h2>Journées du mois</h2>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Jour</th><th>Début</th><th>Fin</th><th>Pause</th><th>Production</th><th>Retard</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot id="foot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Ajouter ou corriger une journée</h2>
     <div class="grid">
       <label>Date<input type="date" id="mDate"></label>
-      <label>Début<input type="time" id="mStart"></label>
-      <label>Fin<input type="time" id="mEnd"></label>
-      <label>Pause (min)<input type="number" id="mPause" value="60"></label>
+      <label>Début<input type="time" id="mStart" value="14:00"></label>
+      <label>Fin<input type="time" id="mEnd" value="00:00"></label>
+      <label>Pause (min)<input type="number" id="mPause" min="0" max="600" step="5" value="60"></label>
     </div>
-    <button id="btnAddOverride" style="margin-top:12px;">Appliquer la modification</button>
-    <span id="msgOverride" style="font-size:13px; margin-left:10px;"></span>
+    <div class="note" style="margin-top:8px">Une fin égale ou antérieure au début signifie le lendemain (14:00 à 00:00 = 10 h). Si la date existe déjà, la journée est remplacée et l'ancienne version est archivée.</div>
+    <div class="form-actions"><button class="primary" id="btnSaveDay" type="button">Enregistrer la journée</button></div>
+    <div id="msgDay" class="msg" role="status" hidden></div>
   </div>
 
-  <!-- REMISE A ZERO -->
   <div class="card">
-    <h3>Zone de Danger</h3>
-    <p style="font-size:13px; color:var(--muted)">Efface les données de session du conseiller sélectionné et enregistre une trace dans l'audit.</p>
-    <button class="danger" id="btnReset">Remettre le compteur du conseiller à 0</button>
+    <h2>Réglages du conseiller</h2>
+    <div class="grid">
+      <label>Nom<input type="text" id="cName" maxlength="40"></label>
+      <label>Taux horaire<input type="number" id="cRate" min="0" step="0.01" inputmode="decimal"></label>
+      <label>Devise<input type="text" id="cCur" maxlength="6"></label>
+      <label>Début prévu (semaine)<input type="time" id="cStart"></label>
+      <label>Fin prévue (semaine)<input type="time" id="cEnd"></label>
+      <label>Pause prévue (min)<input type="number" id="cPause" min="0" max="240" step="5"></label>
+      <label>Tolérance de retard (min)<input type="number" id="cTol" min="0" max="120" step="1"></label>
+    </div>
+    <div class="note" style="margin-top:8px">Le week-end, l'horaire est 13:00 à 23:00 pour tous. La pause prévue est déduite automatiquement quand le conseiller n'en prend pas.</div>
+    <div class="form-actions"><button class="primary" id="btnSaveCfg" type="button">Enregistrer les réglages</button></div>
+    <div id="msgCfg" class="msg" role="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <h2>Primes et retenues du mois</h2>
+    <div class="grid">
+      <label>Prime<input type="number" id="aBonus" min="0" step="0.01" inputmode="decimal" value="0"></label>
+      <label>Retenue<input type="number" id="aDed" min="0" step="0.01" inputmode="decimal" value="0"></label>
+    </div>
+    <div class="form-actions"><button class="primary" id="btnSaveAdj" type="button">Enregistrer pour ce mois</button></div>
+    <div id="msgAdj" class="msg" role="status" hidden></div>
+  </div>
+
+  <div class="card danger-zone">
+    <h2>Zone de danger</h2>
+    <p class="note" style="margin-top:0">Efface les journées du conseiller sélectionné. Elles sont copiées dans l'onglet Archives de la feuille et l'action est inscrite dans le journal.</p>
+    <div class="grid" style="align-items:end">
+      <label>Portée
+        <select id="rScope">
+          <option value="month">Le mois affiché</option>
+          <option value="all">Tout l'historique</option>
+        </select>
+      </label>
+      <div><button class="danger" id="btnReset" type="button">Remettre le compteur à 0</button></div>
+    </div>
+    <div id="msgReset" class="msg" role="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="bar" style="margin-bottom:12px">
+      <h2 style="margin:0">Journal d'audit</h2>
+      <button id="btnLogs" type="button" class="small">Actualiser</button>
+    </div>
+    <div class="tablebox">
+      <table style="min-width:640px">
+        <thead><tr><th>Date</th><th>Administrateur</th><th>Profil</th><th>Action</th><th>Détails</th></tr></thead>
+        <tbody id="logRows"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
-(function(){
-  // Liste des administrateurs autorisés
-  var ADMINS = {
-    "falldiagne28@gmail.com": "admin123",
-    "manager@innovcall.com": "admin123" // Ajoutez ici le 2ème courriel
+(function () {
+'use strict';
+
+var API = 'https://script.google.com/macros/s/AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM/exec';
+var TZ = 'Africa/Casablanca';
+var TOKEN_KEY = 'innovcall.admin.token';
+
+function $(id) { return document.getElementById(id); }
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function store(op, v) {
+  try {
+    if (op === 'get') return sessionStorage.getItem(TOKEN_KEY);
+    if (op === 'set') sessionStorage.setItem(TOKEN_KEY, v);
+    if (op === 'del') sessionStorage.removeItem(TOKEN_KEY);
+  } catch (e) {}
+  return null;
+}
+var fHm = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+var fShort = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, weekday: 'short', day: '2-digit', month: '2-digit' });
+var nf = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function dur(min) { min = Math.max(0, Math.round(min)); return Math.floor(min / 60) + 'h ' + pad(min % 60) + 'min'; }
+
+var token = store('get'), ST = null, offset = 0, profileKey = null, armed = {}, armTimers = {};
+
+function api(body) {
+  var ctl = new AbortController();
+  var timer = setTimeout(function () { ctl.abort(); }, 30000);
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctl.signal })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j || !j.ok) { var e = new Error((j && j.message) || 'Erreur du serveur.'); e.code = (j && j.error) || 'server'; throw e; }
+      return j;
+    }, function () {
+      var n = new Error('Connexion impossible. Vérifiez internet puis réessayez.'); n.code = 'network'; throw n;
+    })
+    .then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
+}
+function call(action, extra) {
+  return api(Object.assign({ action: action, token: token }, extra || {}));
+}
+
+function flash(id, text, kind) {
+  var m = $(id);
+  if (!text) { m.hidden = true; return; }
+  m.hidden = false; m.className = 'msg ' + (kind || 'ok'); m.textContent = text;
+}
+function showLogin(err) { $('panel').hidden = true; $('loginBox').hidden = false; $('loginErr').textContent = err || ''; }
+function showPanel() { $('loginBox').hidden = true; $('panel').hidden = false; }
+function onErr(msgId) {
+  return function (e) {
+    if (e.code === 'unauthorized') { token = null; store('del'); showLogin('Session expirée. Reconnectez-vous.'); return; }
+    flash(msgId, e.message, 'err');
   };
+}
 
-  var CONFIG = {
-    scriptUrl: "https://script.google.com/macros/s/AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM/exec",
-    secretKey: "AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM"
-  };
-
-  var activeAdmin = null;
-
-  document.getElementById('formAdminLogin').addEventListener('submit', function(e){
-    e.preventDefault();
-    var email = document.getElementById('adminEmail').value.trim().toLowerCase();
-    var pass = document.getElementById('adminPass').value.trim();
-
-    if(ADMINS[email] && ADMINS[email] === pass){
-      activeAdmin = email;
-      document.getElementById('adminLogin').style.display = 'none';
-      document.getElementById('adminPanel').style.display = 'flex';
-      document.getElementById('currentAdminEmail').textContent = activeAdmin;
-    } else {
-      document.getElementById('loginErr').textContent = "Accès refusé : courriel ou mot de passe invalide.";
-    }
-  });
-
-  document.getElementById('btnLogout').addEventListener('click', function(){
-    location.reload();
-  });
-
-  // Fonction pour envoyer les traces d'audit dans Google Sheets
-  function logAdminAction(targetProfile, action, details){
-    var nowStr = new Date().toLocaleString("fr-FR", {timeZone: "Africa/Casablanca"});
-    fetch(CONFIG.scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify({
-        key: CONFIG.secretKey,
-        action: "admin_log",
-        timestamp: nowStr,
-        adminEmail: activeAdmin,
-        targetProfile: targetProfile,
-        adminAction: action,
-        details: details
-      })
-    });
+/* ---------- chargement ---------- */
+function applyState(j, fillForms) {
+  ST = j; offset = j.now - Date.now();
+  profileKey = j.profile.key;
+  var sel = $('selProfile'), prev = sel.value;
+  if (sel.options.length !== j.profiles.length) {
+    sel.textContent = '';
+    j.profiles.forEach(function (p) { var o = document.createElement('option'); o.value = p.key; o.textContent = p.name; sel.appendChild(o); });
+  } else {
+    j.profiles.forEach(function (p, i) { sel.options[i].textContent = p.name; });
   }
+  sel.value = profileKey || prev;
+  $('month').value = j.month;
+  if (fillForms) fillSettings();
+  renderTable();
+  showPanel();
+}
 
-  // Action : Correction manuelle
-  document.getElementById('btnAddOverride').addEventListener('click', function(){
-    var prof = document.getElementById('selectProfile').value;
-    var d = document.getElementById('mDate').value;
-    var s = document.getElementById('mStart').value;
-    var e = document.getElementById('mEnd').value;
-    var pz = document.getElementById('mPause').value;
+function load(fillForms) {
+  return call('state', { profile: profileKey || undefined, month: $('month').value || undefined })
+    .then(function (j) { flash('msgTop', ''); applyState(j, fillForms); }, onErr('msgTop'));
+}
 
-    if(!d || !s || !e) { alert("Remplissez la date, le début et la fin."); return; }
+function fillSettings() {
+  var p = ST.profile;
+  $('cName').value = p.name; $('cRate').value = p.rate; $('cCur').value = p.cur;
+  $('cStart').value = p.start; $('cEnd').value = p.end; $('cPause').value = p.pause; $('cTol').value = p.tol;
+  $('aBonus').value = ST.adjust.bonus; $('aDed').value = ST.adjust.ded;
+}
 
-    var details = "Ajout/Correction journée du " + d + " (" + s + " à " + e + ", pause: " + pz + "min)";
-    logAdminAction(prof, "Modification Journée", details);
-    
-    document.getElementById('msgOverride').textContent = "Modification enregistrée dans le journal d'audit.";
-  });
-
-  // Action : Remise à zéro
-  document.getElementById('btnReset').addEventListener('click', function(){
-    var prof = document.getElementById('selectProfile').value;
-    if(confirm("Confirmer la remise à zéro des compteurs pour " + prof + " ? Cette action sera consignée dans les journaux.")){
-      logAdminAction(prof, "Remise à zéro", "Effacement de l'historique de production");
-      alert("Remise à zéro effectuée et enregistrée dans le journal.");
+function loadLogs() {
+  return call('admin_logs').then(function (j) {
+    var tb = $('logRows'); tb.textContent = '';
+    if (!j.logs.length) {
+      var tr = document.createElement('tr'), c = document.createElement('td');
+      c.colSpan = 5; c.className = 'txt'; c.style.color = 'var(--muted)'; c.textContent = 'Aucune action enregistrée.';
+      tr.appendChild(c); tb.appendChild(tr); return;
     }
-  });
+    j.logs.forEach(function (l) {
+      var tr = document.createElement('tr');
+      [l.ts, l.admin, l.profile, l.action, l.details].forEach(function (t, i) {
+        var c = document.createElement('td'); if (i >= 3) c.className = 'txt'; c.textContent = t; tr.appendChild(c);
+      });
+      tb.appendChild(tr);
+    });
+  }, onErr('msgTop'));
+}
 
+/* ---------- affichage ---------- */
+function liveOf(it) {
+  if (it.end !== null) return { prodMin: it.prodMin, pauseMin: it.pauseMin };
+  var now = Date.now() + offset, pz = 0;
+  it.pauses.forEach(function (p) { pz += Math.max(0, (p[1] === null ? now : p[1]) - p[0]); });
+  return { prodMin: Math.max(0, Math.round((now - it.start - pz) / 60000)), pauseMin: Math.round(pz / 60000) };
+}
+
+function renderTable() {
+  if (!ST) return;
+  var list = ST.sessions, tp = 0, tz = 0, tl = 0, days = {};
+  var tb = $('rows'); tb.textContent = '';
+  list.forEach(function (s) {
+    var m = liveOf(s);
+    tp += m.prodMin; tz += m.pauseMin; tl += s.late; days[s.date] = 1;
+    var tr = document.createElement('tr');
+    function td(txt, cls) { var c = document.createElement('td'); c.textContent = txt; if (cls) c.className = cls; tr.appendChild(c); return c; }
+    td(fShort.format(new Date(s.start)), 'txt');
+    td(fHm.format(new Date(s.start)));
+    td(s.end === null ? 'en cours' : fHm.format(new Date(s.end)));
+    td(m.pauseMin + 'min');
+    td(dur(m.prodMin));
+    td(s.late > 0 ? '+' + s.late + ' min' : '—', s.late > 0 ? 'late' : '');
+    var cs = document.createElement('td'), tag = document.createElement('span');
+    tag.className = 'tag' + (s.status === 'Auto-clôturé' ? ' auto' : ''); tag.textContent = s.status;
+    cs.appendChild(tag); tr.appendChild(cs);
+    var ca = document.createElement('td'), box = document.createElement('div'); box.className = 'acts';
+    if (s.end !== null) {
+      var bEdit = document.createElement('button'); bEdit.type = 'button'; bEdit.className = 'small'; bEdit.textContent = 'Modifier';
+      bEdit.addEventListener('click', function () {
+        $('mDate').value = s.date; $('mStart').value = fHm.format(new Date(s.start)); $('mEnd').value = fHm.format(new Date(s.end));
+        $('mPause').value = m.pauseMin; $('mDate').scrollIntoView({ block: 'center' }); $('mStart').focus();
+      });
+      box.appendChild(bEdit);
+    }
+    var bDel = document.createElement('button'); bDel.type = 'button'; bDel.className = 'small'; bDel.textContent = 'Supprimer';
+    bDel.addEventListener('click', function () {
+      if (!armed[s.id]) {
+        armed[s.id] = true; bDel.textContent = 'Confirmer ?'; bDel.className = 'small danger';
+        clearTimeout(armTimers[s.id]);
+        armTimers[s.id] = setTimeout(function () { armed[s.id] = false; bDel.textContent = 'Supprimer'; bDel.className = 'small'; }, 4000);
+        return;
+      }
+      clearTimeout(armTimers[s.id]); armed[s.id] = false; bDel.disabled = true;
+      call('admin_delete_day', { profile: profileKey, id: s.id, month: $('month').value })
+        .then(function (j) { applyState(j, false); loadLogs(); }, function (e) { bDel.disabled = false; onErr('msgTop')(e); });
+    });
+    box.appendChild(bDel); ca.appendChild(box); tr.appendChild(ca);
+    tb.appendChild(tr);
+  });
+  if (!list.length) {
+    var tr = document.createElement('tr'), c = document.createElement('td');
+    c.colSpan = 8; c.className = 'txt'; c.style.color = 'var(--muted)'; c.textContent = 'Aucune journée ce mois-ci pour ce conseiller.';
+    tr.appendChild(c); tb.appendChild(tr);
+  }
+  var f = $('foot'); f.textContent = '';
+  if (list.length) {
+    var fr = document.createElement('tr');
+    ['Total', '', '', tz + 'min', dur(tp), tl + ' min', '', ''].forEach(function (t) {
+      var d = document.createElement('td'); d.textContent = t; fr.appendChild(d);
+    });
+    f.appendChild(fr);
+  }
+  var rate = ST.profile.rate, cur = ST.profile.cur, hours = tp / 60, base = hours * rate, pay = base + ST.adjust.bonus - ST.adjust.ded;
+  $('sHours').textContent = dur(tp);
+  $('sDays').textContent = Object.keys(days).length;
+  $('sLate').textContent = tl + ' min';
+  $('sPause').textContent = dur(tz);
+  if (rate > 0) {
+    $('sPay').textContent = nf.format(pay) + ' ' + cur;
+    $('payDetail').textContent = nf.format(hours) + ' h × ' + nf.format(rate) + ' ' + cur + ' = ' + nf.format(base) +
+      (ST.adjust.bonus ? ' + prime ' + nf.format(ST.adjust.bonus) : '') + (ST.adjust.ded ? ' − retenue ' + nf.format(ST.adjust.ded) : '');
+  } else {
+    $('sPay').textContent = '—';
+    $('payDetail').textContent = 'Taux horaire non défini : renseignez-le dans « Réglages du conseiller ».';
+  }
+}
+
+/* ---------- actions ---------- */
+$('selProfile').addEventListener('change', function () { profileKey = this.value; load(true); });
+$('month').addEventListener('input', function () { load(true); });
+$('btnRefresh').addEventListener('click', function () { load(false); loadLogs(); });
+$('btnLogs').addEventListener('click', loadLogs);
+
+$('btnSaveDay').addEventListener('click', function () {
+  var b = this, d = $('mDate').value, s = $('mStart').value, e = $('mEnd').value;
+  if (!d || !s || !e) { flash('msgDay', 'Remplissez la date, le début et la fin.', 'err'); return; }
+  b.disabled = true;
+  call('admin_save_day', { profile: profileKey, date: d, start: s, end: e, pause: $('mPause').value || 0 })
+    .then(function (j) { applyState(j, false); flash('msgDay', 'Journée enregistrée.', 'ok'); loadLogs(); }, onErr('msgDay'))
+    .then(function () { b.disabled = false; });
+});
+
+$('btnSaveCfg').addEventListener('click', function () {
+  var b = this; b.disabled = true;
+  call('admin_config', {
+    profile: profileKey, name: $('cName').value, rate: $('cRate').value || 0, cur: $('cCur').value,
+    start: $('cStart').value, end: $('cEnd').value, pause: $('cPause').value || 0, tol: $('cTol').value || 0, month: $('month').value
+  }).then(function (j) { applyState(j, true); flash('msgCfg', 'Réglages enregistrés.', 'ok'); loadLogs(); }, onErr('msgCfg'))
+    .then(function () { b.disabled = false; });
+});
+
+$('btnSaveAdj').addEventListener('click', function () {
+  var b = this; b.disabled = true;
+  call('admin_adjust', { profile: profileKey, month: $('month').value, bonus: $('aBonus').value || 0, ded: $('aDed').value || 0 })
+    .then(function (j) { applyState(j, true); flash('msgAdj', 'Primes et retenues enregistrées.', 'ok'); loadLogs(); }, onErr('msgAdj'))
+    .then(function () { b.disabled = false; });
+});
+
+var resetTimer = null;
+$('btnReset').addEventListener('click', function () {
+  var b = this, all = $('rScope').value === 'all';
+  if (!b.dataset.armed) {
+    b.dataset.armed = '1'; b.textContent = all ? 'Confirmer : tout effacer' : 'Confirmer : effacer le mois';
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(function () { delete b.dataset.armed; b.textContent = 'Remettre le compteur à 0'; }, 5000);
+    return;
+  }
+  clearTimeout(resetTimer); delete b.dataset.armed; b.textContent = 'Remettre le compteur à 0'; b.disabled = true;
+  call('admin_reset', { profile: profileKey, month: all ? 'all' : $('month').value })
+    .then(function (j) { applyState(j, false); flash('msgReset', 'Compteur remis à zéro. Les journées sont dans l\'onglet Archives.', 'ok'); loadLogs(); }, onErr('msgReset'))
+    .then(function () { b.disabled = false; });
+});
+
+$('btnLogout').addEventListener('click', function () {
+  var t = token; token = null; store('del'); ST = null; profileKey = null;
+  if (t) api({ action: 'logout', token: t }).then(null, function () {});
+  $('adminPass').value = '';
+  showLogin('');
+});
+
+$('loginForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+  var email = $('adminEmail').value.trim().toLowerCase();
+  api({ action: 'login', role: 'admin', user: email, pass: $('adminPass').value }).then(function (j) {
+    token = j.token; store('set', token); $('adminPass').value = ''; $('adminName').textContent = j.user;
+    return load(true);
+  }).then(function () { return loadLogs(); }, function (err) {
+    $('loginErr').textContent = err.message;
+  }).then(function () { $('loginBtn').disabled = false; });
+});
+
+setInterval(function () { if (ST && token && !document.hidden) renderTable(); }, 30000);
+
+if (token) {
+  load(true).then(function () { if (ST) { $('adminName').textContent = ''; loadLogs(); } });
+} else {
+  showLogin('');
+}
 })();
 </script>
 </body>
