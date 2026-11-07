@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Pointage Téléconseiller - INNOVCALL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --fg:#1b2430; --muted:#5d6978; --line:#d5dbe3;
+  --accent:#2c5fa8; --accent-soft:#e3ecf8; --on-accent:#ffffff;
+  --go:#1f9d55; --go-fg:#ffffff; --pause:#f2b705; --pause-fg:#2a2100; --stop:#d63a3a; --stop-fg:#ffffff;
+  --late:#c0392b; --off:#c9d0da; --off-fg:#7b8696; --warn-bg:#fff4d6; --warn-fg:#6b4e00; --err-bg:#fde8e6; --err-fg:#8f1d12;
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#12171e; --surface:#1b222c; --fg:#e6ebf2; --muted:#9aa6b6; --line:#2e3846;
+  --accent:#7aa8e8; --accent-soft:#223149; --on-accent:#0d1520;
+  --go:#2fbf6c; --go-fg:#04210f; --pause:#f5c623; --pause-fg:#2a2100; --stop:#ec5b5b; --stop-fg:#2b0505;
+  --late:#ff8a7a; --off:#2a323e; --off-fg:#6d7888; --warn-bg:#3a3010; --warn-fg:#f5d680; --err-bg:#3d1b18; --err-fg:#ffb4aa;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2{margin:0;text-wrap:balance}
+h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.clock{font-family:var(--mono);font-weight:500;font-size:clamp(40px,11vw,64px);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.date{color:var(--muted);margin-top:6px;text-transform:capitalize}
+.tz{font-size:12px;color:var(--muted);text-align:right}
+.status{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;font-weight:600;font-size:13px;background:var(--off);color:var(--fg)}
+.pill i{width:9px;height:9px;border-radius:50%;background:var(--off-fg);display:block}
+.pill.work i{background:var(--go)}.pill.brk i{background:var(--pause)}
+.live{display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.live div span{display:block;font-family:var(--font);font-size:12px;color:var(--muted)}
+.live b{font-size:20px;font-weight:600}
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.btn{border:0;border-radius:10px;padding:20px 8px;font:inherit;font-weight:600;font-size:clamp(14px,3.6vw,18px);cursor:pointer;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;line-height:1.2;text-align:center}
+.btn small{font-weight:400;font-size:12px;opacity:.85}
+.btn.go{background:var(--go);color:var(--go-fg)}
+.btn.pause{background:var(--pause);color:var(--pause-fg)}
+.btn.stop{background:var(--stop);color:var(--stop-fg)}
+.btn:disabled{background:var(--off);color:var(--off-fg);cursor:not-allowed}
+.btn.armed{outline:3px solid var(--fg);outline-offset:2px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sum span{font-size:12px;color:var(--muted)}
+.sum b{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.sum .big b{font-size:30px;color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+input{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0;width:100%}
+.tablebox{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:560px}
+th{font-size:12px;text-align:left;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:14px}
+td:first-child,td:last-child{font-family:var(--font)}
+td.late{color:var(--late);font-weight:600}
+tfoot td{font-weight:600;border-bottom:0}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.tag.auto{background:var(--warn-bg);color:var(--warn-fg)}
+.small{font-size:13px;color:var(--muted)}
+.ghost{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 14px;border-radius:8px;cursor:pointer}
+.ghost.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ghost:disabled{opacity:.6;cursor:not-allowed}
+.msg{padding:10px 12px;border-radius:8px;font-size:14px}
+.msg.info{background:var(--accent-soft);color:var(--fg)}
+.msg.err{background:var(--err-bg);color:var(--err-fg)}
+.rules{background:var(--warn-bg);color:var(--warn-fg);padding:10px 12px;border-radius:8px;font-size:13px}
+.login-screen{max-width:400px;margin:60px auto;display:flex;flex-direction:column;gap:16px}
+.login-header{text-align:center;margin-bottom:10px}
+.login-header h1{font-size:22px;color:var(--accent)}
+.login-err{color:var(--late);font-size:13px;margin-top:8px;text-align:center;min-height:1em}
+.user-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;background:var(--accent-soft);padding:10px 16px;border-radius:8px;border:1px solid var(--accent)}
+.user-bar b{color:var(--accent)}
+.user-actions{display:flex;gap:8px;align-items:center}
+.user-actions .ghost{padding:4px 10px;font-size:12px}
+/* fenêtre flottante */
+.mini{padding-block:10px}
+.mini .hide-mini{display:none!important}
+.mini .wrap{gap:10px}
+.mini .clock{font-size:44px}
+.mini .btn{min-height:72px;padding:14px 4px;font-size:15px}
+.mini .card{padding:12px}
+@media (prefers-reduced-motion:no-preference){.btn{transition:transform .08s}.btn:active:not(:disabled){transform:scale(.97)}}
+</style>
+</head>
+<body>
+
+<noscript>Cette page a besoin de JavaScript.</noscript>
+
+<main id="loginSection" class="login-screen" hidden>
+  <div class="card">
+    <div class="login-header">
+      <h1>INNOVCALL</h1>
+      <p class="small">Espace pointage téléconseiller</p>
+    </div>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:12px">
+      <label>Identifiant
+        <input type="text" id="loginUser" required placeholder="ex : conseiller1" autocomplete="username" autocapitalize="none" spellcheck="false">
+      </label>
+      <label>Mot de passe
+        <input type="password" id="loginPass" required placeholder="••••••••" autocomplete="current-password">
+      </label>
+      <button type="submit" id="loginBtn" class="ghost primary" style="margin-top:8px;padding:12px">Se connecter</button>
+      <div id="loginErr" class="login-err" role="alert"></div>
+    </form>
+  </div>
+</main>
+
+<div id="appSection" class="wrap" hidden>
+  <div class="user-bar">
+    <span>Connecté : <b id="loggedInName">Conseiller</b></span>
+    <div class="user-actions">
+      <button class="ghost primary hide-mini" id="bMini" type="button">Mode mini (pop-up)</button>
+      <button class="ghost" id="bLogout" type="button">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="card top">
+    <div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="tz">Heure du Maroc<br>(Africa/Casablanca)</div>
+  </div>
+
+  <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="status">
+      <span class="pill" id="pill"><i></i><span id="pilltxt">Hors shift</span></span>
+      <div class="live">
+        <div><span>Production aujourd'hui</span><b id="liveProd">0h 00min</b></div>
+        <div><span>Pause totale</span><b id="livePause">0min</b></div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn go" id="bGo" type="button"><span id="bGoTxt">Début de shift</span><small>Vert</small></button>
+      <button class="btn pause" id="bPause" type="button"><span>Pause</span><small>Jaune</small></button>
+      <button class="btn stop" id="bStop" type="button"><span id="bStopTxt">Fin de shift</span><small>Rouge</small></button>
+    </div>
+    <div id="msg" class="msg" role="status" aria-live="polite" hidden></div>
+    <div class="small" id="lateInfo"></div>
+    <div class="rules" id="rules"></div>
+  </div>
+
+  <div class="card hide-mini">
+    <div class="row">
+      <h2>Bilan du mois</h2>
+      <label style="max-width:190px">Mois<input type="month" id="month"></label>
+    </div>
+    <div class="sum">
+      <div><span>Heures de production</span><b id="sHours">0h 00min</b></div>
+      <div><span>Jours travaillés</span><b id="sDays">0</b></div>
+      <div><span>Retards cumulés</span><b id="sLate">0 min</b></div>
+      <div><span>Pauses cumulées</span><b id="sPause">0h 00min</b></div>
+      <div class="big"><span>Salaire final estimé</span><b id="sPay">—</b></div>
+    </div>
+    <div class="small" id="payDetail" style="margin-top:10px"></div>
+  </div>
+
+  <div class="card hide-mini">
+    <h2 style="margin-bottom:10px">Journées du mois</h2>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Jour</th><th>Début</th><th>Fin</th><th>Pause</th><th>Production</th><th>Retard</th><th>Statut</th></tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot id="foot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+var API = 'https://script.google.com/macros/s/AKfycbzR9HwWRUhXS-DWBajGdaz6aYWhes1TUFtkDYPjq8GfV8l54Mn2kLknGxh7ye9yiysM/exec';
+var TZ = 'Africa/Casablanca';
+var TOKEN_KEY = 'innovcall.agent.token';
+var MINI = /(^|[?&])mini=1(&|$)/.test(location.search);
+if (MINI) document.body.classList.add('mini');
+
+function $(id) { return document.getElementById(id); }
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function store(op, v) {
+  try {
+    if (op === 'get') return localStorage.getItem(TOKEN_KEY);
+    if (op === 'set') localStorage.setItem(TOKEN_KEY, v);
+    if (op === 'del') localStorage.removeItem(TOKEN_KEY);
+  } catch (e) {}
+  return null;
+}
+
+var fClock = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+var fHm = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+var fDay = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+var fShort = new Intl.DateTimeFormat('fr-FR', { timeZone: TZ, weekday: 'short', day: '2-digit', month: '2-digit' });
+var fIso = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+var nf = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function dur(min) { min = Math.max(0, Math.round(min)); return Math.floor(min / 60) + 'h ' + pad(min % 60) + 'min'; }
+
+var token = store('get'), ST = null, offset = 0, pending = false, armedStop = false, armTimer = null, lastOk = true;
+function nowS() { return Date.now() + offset; }
+
+/* ---------- appels au serveur ---------- */
+function api(body) {
+  var ctl = new AbortController();
+  var timer = setTimeout(function () { ctl.abort(); }, 30000);
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctl.signal })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j || !j.ok) { var e = new Error((j && j.message) || 'Erreur du serveur.'); e.code = (j && j.error) || 'server'; throw e; }
+      return j;
+    }, function () {
+      var n = new Error('Connexion impossible. Vérifiez internet puis réessayez.'); n.code = 'network'; throw n;
+    })
+    .then(function (j) { clearTimeout(timer); return j; }, function (e) { clearTimeout(timer); throw e; });
+}
+
+function showMsg(text, kind) {
+  var m = $('msg');
+  if (!text) { m.hidden = true; m.textContent = ''; return; }
+  m.hidden = false; m.className = 'msg ' + (kind || 'info'); m.textContent = text;
+}
+
+function showLogin(err) {
+  $('appSection').hidden = true;
+  $('loginSection').hidden = false;
+  $('loginErr').textContent = err || '';
+}
+function showApp() { $('loginSection').hidden = true; $('appSection').hidden = false; }
+
+function handleErr(e) {
+  if (e.code === 'unauthorized') {
+    token = null; store('del'); ST = null;
+    showLogin('Session expirée. Reconnectez-vous.');
+  } else {
+    showMsg(e.message, 'err');
+  }
+}
+
+/* ---------- état ---------- */
+function applyState(j) {
+  ST = j;
+  offset = j.now - Date.now();
+  if (!$('month').value) $('month').value = j.month;
+  $('loggedInName').textContent = j.profile.name;
+  lastOk = true;
+  renderAll();
+}
+
+function refresh(silent) {
+  if (!token) return Promise.resolve();
+  return api({ action: 'state', token: token, month: $('month').value || undefined }).then(function (j) {
+    if (silent && lastOk === false) showMsg('');
+    applyState(j);
+  }, function (e) {
+    if (silent && e.code === 'network') { lastOk = false; showMsg('Connexion perdue : les chiffres affichés ne sont peut-être plus à jour.', 'err'); return; }
+    handleErr(e);
+  });
+}
+
+function sendEvent(type) {
+  if (pending || !token) return;
+  pending = true; showMsg(''); renderStatus();
+  api({ action: 'event', token: token, type: type, month: $('month').value || undefined }).then(function (j) {
+    applyState(j);
+    if (j.note) showMsg(j.note, 'info');
+  }, handleErr).then(function () { pending = false; renderStatus(); });
+}
+
+/* ---------- calculs d'affichage ---------- */
+function liveOf(it) {
+  if (it.end !== null) return { prodMin: it.prodMin, pauseMin: it.pauseMin };
+  var now = nowS(), pz = 0;
+  it.pauses.forEach(function (p) { pz += Math.max(0, (p[1] === null ? now : p[1]) - p[0]); });
+  return { prodMin: Math.max(0, Math.round((now - it.start - pz) / 60000)), pauseMin: Math.round(pz / 60000) };
+}
+function isPaused(it) { var l = it && it.pauses.length ? it.pauses[it.pauses.length - 1] : null; return !!l && l[1] === null; }
+
+/* ---------- affichage ---------- */
+function renderClock() {
+  var now = nowS();
+  $('clock').textContent = fClock.format(new Date(now));
+  $('date').textContent = fDay.format(new Date(now));
+}
+
+function renderStatus() {
+  if (!ST) return;
+  var a = ST.active, pill = $('pill'), go = $('bGo'), ps = $('bPause'), st = $('bStop');
+  pill.className = 'pill';
+  if (!a) {
+    $('pilltxt').textContent = 'Hors shift';
+    $('bGoTxt').textContent = 'Début de shift';
+    go.disabled = pending; ps.disabled = true; st.disabled = true;
+  } else if (isPaused(a)) {
+    pill.classList.add('brk');
+    $('pilltxt').textContent = 'En pause depuis ' + fHm.format(new Date(a.pauses[a.pauses.length - 1][0]));
+    $('bGoTxt').textContent = 'Reprendre';
+    go.disabled = pending; ps.disabled = true; st.disabled = pending;
+  } else {
+    pill.classList.add('work');
+    $('pilltxt').textContent = 'En shift depuis ' + fHm.format(new Date(a.start));
+    $('bGoTxt').textContent = 'En shift';
+    go.disabled = true; ps.disabled = pending; st.disabled = pending;
+  }
+  $('bStopTxt').textContent = armedStop ? 'Confirmer la fin ?' : 'Fin de shift';
+  st.classList.toggle('armed', armedStop);
+
+  var prod = ST.today.prodMin, pz = ST.today.pauseMin;
+  if (a) { var l = liveOf(a); prod += l.prodMin; pz += l.pauseMin; }
+  $('liveProd').textContent = dur(prod);
+  $('livePause').textContent = pz + 'min';
+}
+
+function renderInfo() {
+  var a = ST.active, p = ST.plan, el = $('lateInfo');
+  if (a) {
+    el.textContent = a.late > 0
+      ? 'Retard sur ce shift : ' + a.late + ' min (début prévu à ' + a.planStart + ').'
+      : 'À l\'heure (début prévu à ' + a.planStart + ').';
+  } else {
+    el.textContent = 'Shift prévu aujourd\'hui de ' + p.start + ' à ' + p.end + (p.weekend ? ' (week-end)' : '') + '.';
+  }
+  var end = a ? a.planEnd : p.end;
+  $('rules').textContent = 'Si vous oubliez de terminer votre shift, il est clôturé automatiquement à ' + end +
+    ' (après ' + ST.graceMin + ' min de délai). Si vous ne prenez pas de pause, ' + ST.profile.pause + ' min sont déduites.';
+}
+
+function renderMonth() {
+  if (!ST) return;
+  var list = ST.sessions, tp = 0, tz = 0, tl = 0, days = {};
+  var tb = $('rows'); tb.textContent = '';
+  list.forEach(function (s) {
+    var m = liveOf(s);
+    tp += m.prodMin; tz += m.pauseMin; tl += s.late; days[s.date] = 1;
+    var tr = document.createElement('tr');
+    function td(txt, cls) { var c = document.createElement('td'); c.textContent = txt; if (cls) c.className = cls; tr.appendChild(c); return c; }
+    td(fShort.format(new Date(s.start)));
+    td(fHm.format(new Date(s.start)));
+    td(s.end === null ? 'en cours' : fHm.format(new Date(s.end)));
+    td(m.pauseMin + 'min');
+    td(dur(m.prodMin));
+    td(s.late > 0 ? '+' + s.late + ' min' : '—', s.late > 0 ? 'late' : '');
+    var c = document.createElement('td'), tag = document.createElement('span');
+    tag.className = 'tag' + (s.status === 'Auto-clôturé' ? ' auto' : '');
+    tag.textContent = s.status;
+    if (s.status === 'Auto-clôturé') tag.title = 'Fin de shift et pause calculées automatiquement';
+    c.appendChild(tag); tr.appendChild(c); tb.appendChild(tr);
+  });
+  if (!list.length) {
+    var tr = document.createElement('tr'), c = document.createElement('td');
+    c.colSpan = 7; c.style.color = 'var(--muted)'; c.textContent = 'Aucune journée enregistrée ce mois-ci.';
+    tr.appendChild(c); tb.appendChild(tr);
+  }
+  var f = $('foot'); f.textContent = '';
+  if (list.length) {
+    var fr = document.createElement('tr');
+    ['Total', '', '', tz + 'min', dur(tp), tl + ' min', ''].forEach(function (t) {
+      var d = document.createElement('td'); d.textContent = t; fr.appendChild(d);
+    });
+    f.appendChild(fr);
+  }
+  var rate = ST.profile.rate, cur = ST.profile.cur, hours = tp / 60;
+  var base = hours * rate, pay = base + ST.adjust.bonus - ST.adjust.ded;
+  $('sHours').textContent = dur(tp);
+  $('sDays').textContent = Object.keys(days).length;
+  $('sLate').textContent = tl + ' min';
+  $('sPause').textContent = dur(tz);
+  if (rate > 0) {
+    $('sPay').textContent = nf.format(pay) + ' ' + cur;
+    $('payDetail').textContent = nf.format(hours) + ' h × ' + nf.format(rate) + ' ' + cur + ' = ' + nf.format(base) +
+      (ST.adjust.bonus ? ' + prime ' + nf.format(ST.adjust.bonus) : '') +
+      (ST.adjust.ded ? ' − retenue ' + nf.format(ST.adjust.ded) : '');
+  } else {
+    $('sPay').textContent = '—';
+    $('payDetail').textContent = 'Le taux horaire n\'est pas encore défini. L\'administrateur doit le renseigner.';
+  }
+}
+
+function renderAll() { renderClock(); renderStatus(); renderInfo(); renderMonth(); showApp(); }
+
+/* ---------- événements ---------- */
+$('bGo').addEventListener('click', function () {
+  if (!ST) return;
+  sendEvent(ST.active && isPaused(ST.active) ? 'resume' : 'start');
+});
+$('bPause').addEventListener('click', function () { sendEvent('pause'); });
+$('bStop').addEventListener('click', function () {
+  if (!armedStop) {
+    armedStop = true; renderStatus();
+    clearTimeout(armTimer);
+    armTimer = setTimeout(function () { armedStop = false; renderStatus(); }, 5000);
+    return;
+  }
+  clearTimeout(armTimer); armedStop = false;
+  sendEvent('stop');
+});
+$('month').addEventListener('input', function () { refresh(false); });
+
+$('bMini').addEventListener('click', function () {
+  var w = 380, h = 520;
+  window.open(location.pathname + '?mini=1', 'PointageMini',
+    'width=' + w + ',height=' + h + ',top=' + Math.round(screen.height / 2 - h / 2) + ',left=' + Math.round(screen.width / 2 - w / 2) +
+    ',menubar=no,toolbar=no,location=no,status=no');
+});
+
+$('bLogout').addEventListener('click', function () {
+  var t = token;
+  token = null; store('del'); ST = null;
+  if (t) api({ action: 'logout', token: t }).then(null, function () {});
+  $('loginUser').value = ''; $('loginPass').value = '';
+  showLogin('');
+});
+
+$('loginForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var u = $('loginUser').value.trim().toLowerCase(), p = $('loginPass').value;
+  $('loginErr').textContent = ''; $('loginBtn').disabled = true;
+  api({ action: 'login', role: 'agent', user: u, pass: p }).then(function (j) {
+    token = j.token; store('set', token); $('loginPass').value = '';
+    return api({ action: 'state', token: token });
+  }).then(function (j) {
+    showMsg(''); applyState(j);
+  }).then(null, function (err) {
+    $('loginErr').textContent = err.message;
+  }).then(function () { $('loginBtn').disabled = false; });
+});
+
+/* ---------- démarrage ---------- */
+setInterval(function () { if (ST) { renderClock(); renderStatus(); } }, 1000);
+setInterval(function () { if (ST) renderMonth(); }, 30000);
+setInterval(function () { if (token && !pending && !document.hidden) refresh(true); }, 45000);
+document.addEventListener('visibilitychange', function () { if (!document.hidden && token && !pending) refresh(true); });
+
+if (token) {
+  api({ action: 'state', token: token }).then(applyState, function (e) {
+    if (e.code === 'unauthorized') handleErr(e);
+    else showLogin(e.message);
+  });
+} else {
+  showLogin('');
+}
+})();
+</script>
+</body>
+</html>
